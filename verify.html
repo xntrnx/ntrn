@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ficha de autenticidad</title>
+<style>
+  :root{
+    --paper:#E7E1CE;
+    --paper-edge:#D9D1B8;
+    --ink:#211C15;
+    --ink-faint:#5B5343;
+    --rule:#B7AC8B;
+    --stamp-red:#8C2F1B;
+    --stamp-green:#3F5A45;
+    --stamp-amber:#8A6A1E;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --paper:#E7E1CE; --paper-edge:#D9D1B8; } /* keep card paper-toned regardless of OS theme */
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background: #14110D;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 4px);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding: 40px 16px 80px;
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    color: var(--ink);
+  }
+  .drawer-label{
+    max-width: 480px;
+    width:100%;
+    margin: 0 auto 10px;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #A79C7D;
+    text-align:center;
+  }
+  .card{
+    position:relative;
+    max-width: 480px;
+    width:100%;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px rgba(0,0,0,0.45);
+    padding: 34px 30px 30px;
+  }
+  .card::before, .card::after{
+    content:"";
+    position:absolute;
+    top: 14px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: #14110D;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .card::before{ left: 16px; }
+  .card::after{ right: 16px; }
+
+  .field-label{
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  h1{
+    margin: 4px 0 2px;
+    font-size: 26px;
+    line-height: 1.15;
+    font-weight: 400;
+    font-style: italic;
+  }
+  .meta-line{
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+  hr{
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 16px 0;
+  }
+  .photos{
+    display:flex;
+    gap: 8px;
+    margin: 4px 0 18px;
+    overflow-x:auto;
+  }
+  .photos img{
+    height: 140px;
+    width:auto;
+    border: 1px solid var(--paper-edge);
+    filter: sepia(0.15) contrast(1.02);
+  }
+  .desc{
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0 0 20px;
+  }
+  dl{ margin: 0 0 20px; }
+  dl div{ display:flex; gap: 10px; padding: 3px 0; }
+  dt{ flex: 0 0 150px; }
+  dd{ margin:0; font-size: 13.5px; }
+
+  .stamp-zone{
+    position:relative;
+    min-height: 148px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin: 10px 0 6px;
+  }
+  .stamp{
+    width: 148px; height: 148px;
+    opacity: 0;
+    transform: scale(1.7) rotate(-14deg);
+    transition: opacity .18s ease-out, transform .38s cubic-bezier(.2,1.4,.4,1);
+  }
+  .stamp.show{
+    opacity: 0.92;
+    transform: scale(1) rotate(-8deg);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .stamp{ transition: opacity .01s linear; transform: scale(1) rotate(-8deg); }
+  }
+
+  .hash-line{
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    word-break: break-all;
+    text-align:center;
+    margin-top: 10px;
+  }
+  .status-text{
+    text-align:center;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    margin-top: 6px;
+  }
+  .status-text.ok{ color: var(--stamp-green); }
+  .status-text.bad{ color: var(--stamp-red); }
+  .status-text.pending{ color: var(--stamp-amber); }
+
+  .fallback{
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--rule);
+    font-size: 13px;
+  }
+  .fallback summary{
+    cursor:pointer;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  .fallback textarea{
+    width:100%;
+    height: 110px;
+    margin-top: 10px;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 12px;
+    padding: 8px;
+    border: 1px solid var(--paper-edge);
+    background: #fbf9f2;
+    color: var(--ink);
+  }
+  .fallback button, .fallback input[type=file]{
+    margin-top: 8px;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 12px;
+    padding: 6px 10px;
+    background: #fbf9f2;
+    border: 1px solid var(--ink-faint);
+    color: var(--ink);
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+  <div class="drawer-label">archivo de obras — verificación de autenticidad</div>
+
+  <div class="card" id="card">
+    <div id="content">
+      <div class="field-label">cargando ficha…</div>
+    </div>
+  </div>
+
+<script>
+(function(){
+
+  const PUBLIC_KEY_URL = "public-key.json"; // relativo: junto a este archivo en el repo
+
+  const params = new URLSearchParams(location.search);
+  const workId = params.get("id");
+
+  const contentEl = document.getElementById("content");
+
+  function b64ToBytes(b64){
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+    return arr;
+  }
+
+  function canonicalize(obj){
+    if (Array.isArray(obj)) return obj.map(canonicalize);
+    if (obj && typeof obj === "object"){
+      return Object.keys(obj).sort().reduce((acc,k)=>{ acc[k]=canonicalize(obj[k]); return acc; }, {});
+    }
+    return obj;
+  }
+
+  async function verifyWork(work){
+    const copy = Object.assign({}, work);
+    const sigB64 = copy.signature;
+    const pubB64 = copy.publicKeyBase64;
+    delete copy.signature;
+    delete copy.publicKeyBase64;
+
+    if (!sigB64 || !pubB64){
+      return { ok:false, reason:"La ficha no trae firma." };
+    }
+
+    let trustedPub = null;
+    try{
+      const res = await fetch(PUBLIC_KEY_URL, { cache:"no-store" });
+      if (res.ok){
+        const j = await res.json();
+        trustedPub = j.publicKeyBase64;
+      }
+    }catch(e){ /* seguimos sin ella; usamos la que trae la ficha, marcando el resultado */ }
+
+    const keyMatchesPublished = trustedPub ? (trustedPub === pubB64) : null;
+
+    const canonical = JSON.stringify(canonicalize(copy));
+    const data = new TextEncoder().encode(canonical);
+
+    try{
+      const key = await crypto.subtle.importKey(
+        "raw", b64ToBytes(pubB64), { name:"Ed25519" }, false, ["verify"]
+      );
+      const sigOk = await crypto.subtle.verify("Ed25519", key, b64ToBytes(sigB64), data);
+      return {
+        ok: sigOk && keyMatchesPublished !== false,
+        sigOk,
+        keyMatchesPublished,
+      };
+    }catch(e){
+      return { ok:false, reason:"Este navegador no soporta verificación Ed25519 (crypto.subtle). Prueba con una versión reciente de Chrome, Firefox o Safari." };
+    }
+  }
+
+  function fmtHash(b64){
+    if (!b64) return "";
+    return b64.slice(0,8)+"···"+b64.slice(-8);
+  }
+
+  function render(work, result){
+    let stampClass = "pending", stampLabel = "SIN VERIFICAR", stampSvg = stampAmber();
+    if (result.reason){
+      stampClass = "pending"; stampLabel = result.reason;
+    } else if (result.ok){
+      stampClass = "ok"; stampLabel = "FIRMA AUTÉNTICA";
+      stampSvg = stampGreen();
+    } else {
+      stampClass = "bad"; stampLabel = "FIRMA NO VÁLIDA — no coincide con el registro";
+      stampSvg = stampRed();
+    }
+
+    const photos = (work.fotos||[]).map(src=>`<img src="${src}" alt="">`).join("");
+
+    contentEl.innerHTML = `
+      <div class="field-label">obra ${work.id||"—"}</div>
+      <h1>${work.titulo||"(sin título)"}</h1>
+      <div class="meta-line">${work.tecnica||""}${work.tecnica&&work.anio?" · ":""}${work.anio||""}${work.dimensiones?" · "+work.dimensiones:""}</div>
+      ${photos ? `<div class="photos">${photos}</div>` : ""}
+      ${work.descripcion ? `<p class="desc">${work.descripcion}</p>` : ""}
+      <dl>
+        ${work.propietarioActual ? `<div><dt class="field-label">propietario</dt><dd>${work.propietarioActual}</dd></div>` : ""}
+        ${work.fechaRegistro ? `<div><dt class="field-label">registrado</dt><dd>${work.fechaRegistro}</dd></div>` : ""}
+      </dl>
+      <hr>
+      <div class="stamp-zone">
+        <div class="stamp" id="stamp">${stampSvg}</div>
+      </div>
+      <div class="status-text ${stampClass}">${stampLabel}</div>
+      ${work.signature ? `<div class="hash-line">firma: ${fmtHash(work.signature)}</div>` : ""}
+      <details class="fallback">
+        <summary>verificar otra ficha manualmente</summary>
+        <textarea id="manualJson" placeholder="Pega aquí el JSON de la obra…"></textarea><br>
+        <input type="file" id="manualFile" accept="application/json">
+        <button id="manualBtn">Verificar</button>
+      </details>
+    `;
+
+    requestAnimationFrame(()=>{
+      const s = document.getElementById("stamp");
+      if (s) s.classList.add("show");
+    });
+
+    wireFallback();
+  }
+
+  function wireFallback(){
+    const btn = document.getElementById("manualBtn");
+    const ta = document.getElementById("manualJson");
+    const file = document.getElementById("manualFile");
+    if (file){
+      file.addEventListener("change", async ()=>{
+        const f = file.files[0];
+        if (f) ta.value = await f.text();
+      });
+    }
+    if (btn){
+      btn.addEventListener("click", async ()=>{
+        try{
+          const work = JSON.parse(ta.value);
+          const result = await verifyWork(work);
+          render(work, result);
+        }catch(e){
+          alert("JSON inválido: "+e.message);
+        }
+      });
+    }
+  }
+
+  function stampGreen(){ return stampSvg("var(--stamp-green)", "AUTÉNTICO"); }
+  function stampRed(){ return stampSvg("var(--stamp-red)", "NO VÁLIDO"); }
+  function stampAmber(){ return stampSvg("var(--stamp-amber)", "SIN FICHA"); }
+
+  function stampSvg(color, word){
+    const id = "f"+Math.random().toString(36).slice(2);
+    return `
+    <svg viewBox="0 0 160 160" width="100%" height="100%">
+      <defs>
+        <filter id="${id}">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="3"/>
+        </filter>
+      </defs>
+      <g filter="url(#${id})" fill="none" stroke="${color}" stroke-width="3">
+        <circle cx="80" cy="80" r="62"/>
+        <circle cx="80" cy="80" r="52"/>
+      </g>
+      <text x="80" y="72" text-anchor="middle" fill="${color}" font-family="Courier New, monospace"
+            font-size="15" letter-spacing="1" filter="url(#${id})">${word}</text>
+      <text x="80" y="98" text-anchor="middle" fill="${color}" font-family="Georgia, serif"
+            font-style="italic" font-size="11" filter="url(#${id})">archivo de obras</text>
+    </svg>`;
+  }
+
+  async function main(){
+    if (!workId){
+      contentEl.innerHTML = `
+        <div class="field-label">sin id de obra</div>
+        <p class="desc">Abre este enlace con <code>?id=CODIGO-DE-LA-OBRA</code>, o usa la verificación manual.</p>
+        <details class="fallback" open>
+          <summary>verificar una ficha manualmente</summary>
+          <textarea id="manualJson" placeholder="Pega aquí el JSON de la obra…"></textarea><br>
+          <input type="file" id="manualFile" accept="application/json">
+          <button id="manualBtn">Verificar</button>
+        </details>`;
+      wireFallback();
+      return;
+    }
+    try{
+      const res = await fetch(`works/${encodeURIComponent(workId)}.json`, { cache:"no-store" });
+      if (!res.ok) throw new Error("no encontrada");
+      const work = await res.json();
+      const result = await verifyWork(work);
+      render(work, result);
+    }catch(e){
+      contentEl.innerHTML = `
+        <div class="field-label">obra ${workId}</div>
+        <p class="desc">No se encontró una ficha con este ID en el archivo.</p>`;
+    }
+  }
+
+  main();
+})();
+</script>
+</body>
+</html>

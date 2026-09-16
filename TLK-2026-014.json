@@ -1,0 +1,14 @@
+{
+  "id": "TLK-2026-014",
+  "titulo": "Nombre de la obra",
+  "anio": 2026,
+  "tecnica": "Óleo sobre lienzo",
+  "dimensiones": "80 x 100 cm",
+  "descripcion": "Breve descripción o contexto de la pieza.",
+  "propietarioActual": "Jimmy (artista)",
+  "fechaRegistro": "2026-09-15",
+  "fotos": [
+    "https://raw.githubusercontent.com/USUARIO/REPO/main/works/photos/TLK-2026-014-frente.jpg",
+    "https://raw.githubusercontent.com/USUARIO/REPO/main/works/photos/TLK-2026-014-reverso.jpg"
+  ]
+}
