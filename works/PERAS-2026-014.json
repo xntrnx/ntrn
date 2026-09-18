@@ -1,14 +1,16 @@
 {
   "id": "PERAS-2026-014",
-  "titulo": "Nombre de la obra",
+  "titulo": "PERAS",
   "anio": 2026,
-  "tecnica": "Óleo sobre lienzo",
+  "tecnica": "Acuarela",
   "dimensiones": "80 x 100 cm",
-  "descripcion": "Breve descripción o contexto de la pieza.",
-  "propietarioActual": "Jimmy (artista)",
+  "descripcion": "Sombras frias",
+  "propietarioActual": "unapausa/isaac",
   "fechaRegistro": "2026-09-15",
+  "precio": "negotiable",
+  "disponible": true
   "fotos": [
-    "https://raw.githubusercontent.com/USUARIO/REPO/main/works/photos/TLK-2026-014-frente.jpg",
+    "https://raw.githubusercontent.com/xntrnx/ntrn/main/works/PERAS-F.jpg",
     "https://raw.githubusercontent.com/USUARIO/REPO/main/works/photos/TLK-2026-014-reverso.jpg"
   ],
   "publicKeyBase64": "kt3/xfAYk4Jh63X1qqHcIUCk030W0vIDzwt77Gw9ZgM=",
