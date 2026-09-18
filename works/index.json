@@ -7,5 +7,14 @@
     "thumb": "works/photos/TLK-2026-014-frente.jpg",
     "precioMXN": 8500,
     "disponible": true
+  },
+{
+    "id": "PERAS-2026-014",
+    "titulo": "NPERASCOLORS",
+    "tecnica": "Acuarelas",
+    "anio": 2026,
+    "thumb": "works/photos/PERAS-F.jpg",
+    "precioMXN": 8500,
+    "disponible": true
   }
 ]
