@@ -3,186 +3,147 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Galería — Archivo de obras</title>
+<title>theikkyu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&family=Fraunces:ital,opsz,wght@1,9..144,600..900&family=Newsreader:ital,wght@1,300..500&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#E7E1CE;
-    --paper-edge:#D9D1B8;
-    --ink:#211C15;
-    --ink-faint:#5B5343;
-    --rule:#B7AC8B;
-    --stamp-green:#3F5A45;
-    --stamp-amber:#8A6A1E;
+    --bg: #0B0B0A;
+    --fg: #ECE8E1;
+    --muted: #726C60;
   }
   *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; }
+  html,body{ margin:0; padding:0; height:100%; }
   body{
+    background: radial-gradient(ellipse at 50% 35%, #141310 0%, var(--bg) 65%);
+    color: var(--fg);
     min-height:100vh;
-    background:#14110D;
-    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 4px);
-    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
-    color: var(--ink);
-    padding: 40px 16px 80px;
-  }
-  .drawer-label{
-    max-width: 980px;
-    margin: 0 auto 22px;
-    font-family: "Courier New", ui-monospace, monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    color: #A79C7D;
-    text-align:center;
-  }
-  .grid{
-    max-width: 980px;
-    margin: 0 auto;
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 22px;
-  }
-  .card{
-    position:relative;
-    background: var(--paper);
-    border: 1px solid var(--paper-edge);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 30px rgba(0,0,0,0.4);
-    padding: 20px 18px 18px;
-    text-decoration:none;
-    color: var(--ink);
     display:flex;
     flex-direction:column;
-  }
-  .card::before, .card::after{
-    content:"";
-    position:absolute;
-    top: 10px;
-    width: 9px; height: 9px;
-    border-radius: 50%;
-    background: #14110D;
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
-  }
-  .card::before{ left: 13px; }
-  .card::after{ right: 13px; }
-  .thumb-wrap{
-    aspect-ratio: 4/5;
+    align-items:center;
+    justify-content:center;
     overflow:hidden;
-    margin: 6px 0 12px;
-    border: 1px solid var(--paper-edge);
-    background: #d9d1b8;
   }
-  .thumb-wrap img{ width:100%; height:100%; object-fit:cover; filter: sepia(0.12) contrast(1.02); display:block; }
-  .field-label{
-    font-family: "Courier New", ui-monospace, monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    color: var(--ink-faint);
-    text-transform: uppercase;
-  }
-  h2{
-    margin: 3px 0 2px;
-    font-size: 18px;
-    font-weight: 400;
-    font-style: italic;
-    line-height:1.2;
-  }
-  .meta{
-    font-family: "Courier New", ui-monospace, monospace;
-    font-size: 11.5px;
-    color: var(--ink-faint);
-    margin-bottom: 10px;
-  }
-  .bottom-row{
-    margin-top: auto;
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width: 900px;
+    height: 40vh;
+    min-height: 220px;
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    padding-top: 10px;
-    border-top: 1px dashed var(--rule);
+    justify-content:center;
+    padding: 0 24px;
   }
-  .price{ font-size: 14px; }
-  .badge{
-    font-family: "Courier New", ui-monospace, monospace;
-    font-size: 10px;
-    letter-spacing: 0.05em;
-    padding: 2px 6px;
-    border: 1px solid currentColor;
-  }
-  .badge.disponible{ color: var(--stamp-green); }
-  .badge.vendida{ color: var(--stamp-amber); }
-  .actions{
+
+  .word{
+    position:absolute;
     display:flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .actions a{
-    flex:1;
+    flex-direction:column;
+    align-items:center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    pointer-events:none;
     text-align:center;
-    font-family: "Courier New", ui-monospace, monospace;
-    font-size: 11px;
-    letter-spacing: 0.04em;
-    padding: 7px 6px;
-    border: 1px solid var(--ink-faint);
-    color: var(--ink);
-    text-decoration:none;
   }
-  .actions a.buy{
-    background: var(--ink);
-    color: var(--paper);
-    border-color: var(--ink);
+  .word.active{
+    opacity: 1;
+    transform: translateY(0);
   }
-  .empty, .error{
-    max-width: 480px;
-    margin: 0 auto;
+
+  .kanji{
+    font-family: "Noto Serif JP", serif;
+    font-size: clamp(20px, 3vw, 28px);
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .w-ikkyu{
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(42px, 9vw, 100px);
+    letter-spacing: -0.01em;
+  }
+  .w-pausa{
+    font-family: "Courier Prime", ui-monospace, monospace;
+    font-weight: 400;
+    font-size: clamp(28px, 6vw, 58px);
+    letter-spacing: 0.14em;
+    text-transform: lowercase;
+  }
+  .w-ceca{
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-weight: 780;
+    font-variation-settings: "SOFT" 60, "WONK" 1;
+    font-size: clamp(46px, 10vw, 108px);
+    letter-spacing: -0.01em;
+  }
+
+  .below{
+    margin-top: 4vh;
     text-align:center;
-    color: #A79C7D;
-    font-family: "Courier New", ui-monospace, monospace;
+  }
+  .below a{
+    font-family: "Courier Prime", ui-monospace, monospace;
     font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration:none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 3px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .below a:hover{
+    color: var(--fg);
+    border-color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .word{ transition: opacity 0.01s linear, transform 0.01s linear; }
   }
 </style>
 </head>
 <body>
-  <div class="drawer-label">archivo de obras — galería</div>
-  <div class="grid" id="grid">
-    <div class="empty">cargando…</div>
+
+  <div class="stage" id="stage">
+    <div class="word w-ikkyu" data-i="0">
+      <span class="kanji">一休</span>
+      <span>theikkyu</span>
+    </div>
+    <div class="word w-pausa" data-i="1">
+      <span>una pausa</span>
+    </div>
+    <div class="word w-ceca" data-i="2">
+      <span>Cecahuitl</span>
+    </div>
+  </div>
+
+  <div class="below">
+    <a href="galeria.html">Galería →</a>
   </div>
 
 <script>
-(async function(){
-  const grid = document.getElementById("grid");
-  try{
-    const res = await fetch("works/index.json", { cache:"no-store" });
-    if (!res.ok) throw new Error("no se pudo cargar el catálogo");
-    const items = await res.json();
-    if (!items.length){
-      grid.innerHTML = `<div class="empty">Todavía no hay obras registradas.</div>`;
-      return;
-    }
-    grid.innerHTML = items.map(renderCard).join("");
-  }catch(e){
-    grid.innerHTML = `<div class="error">No se pudo cargar el catálogo (works/index.json). ${e.message}</div>`;
+(function(){
+  const words = Array.from(document.querySelectorAll(".word"));
+  let i = 0;
+  const HOLD = 3400;
+
+  function show(idx){
+    words.forEach(w => w.classList.remove("active"));
+    words[idx].classList.add("active");
   }
 
-  function renderCard(item){
-    const badgeClass = item.disponible ? "disponible" : "vendida";
-    const badgeText = item.disponible ? "DISPONIBLE" : "VENDIDA";
-    const precio = typeof item.precioMXN === "number"
-      ? item.precioMXN.toLocaleString("es-MX", { style:"currency", currency:"MXN", maximumFractionDigits:0 })
-      : "";
-    return `
-      <div class="card">
-        <div class="field-label">${item.id}</div>
-        ${item.thumb ? `<div class="thumb-wrap"><img src="${item.thumb}" alt=""></div>` : ""}
-        <h2>${item.titulo||"(sin título)"}</h2>
-        <div class="meta">${item.tecnica||""}${item.tecnica&&item.anio?" · ":""}${item.anio||""}</div>
-        <div class="bottom-row">
-          <div class="price">${precio}</div>
-          <div class="badge ${badgeClass}">${badgeText}</div>
-        </div>
-        <div class="actions">
-          <a href="verify.html?id=${encodeURIComponent(item.id)}">certificado</a>
-          ${item.disponible ? `<a class="buy" href="comprar.html?id=${encodeURIComponent(item.id)}">comprar</a>` : ""}
-        </div>
-      </div>`;
-  }
+  show(i);
+  setInterval(() => {
+    i = (i + 1) % words.length;
+    show(i);
+  }, HOLD);
 })();
 </script>
 </body>
