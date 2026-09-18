@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comprar — Archivo de obras</title>
+<style>
+  :root{
+    --paper:#E7E1CE;
+    --paper-edge:#D9D1B8;
+    --ink:#211C15;
+    --ink-faint:#5B5343;
+    --rule:#B7AC8B;
+    --stamp-green:#3F5A45;
+    --stamp-amber:#8A6A1E;
+    --stamp-red:#8C2F1B;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:#14110D;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 4px);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    color: var(--ink);
+    display:flex; justify-content:center;
+    padding: 40px 16px 80px;
+  }
+  .drawer-label{
+    position:absolute; top:16px; left:0; right:0;
+    text-align:center;
+    font-family:"Courier New", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.08em; color:#A79C7D;
+  }
+  .card{
+    position:relative;
+    max-width: 480px; width:100%;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px rgba(0,0,0,0.45);
+    padding: 34px 30px 30px;
+    margin-top: 20px;
+  }
+  .card::before, .card::after{
+    content:""; position:absolute; top:14px; width:11px; height:11px; border-radius:50%;
+    background:#14110D; box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .card::before{ left:16px; } .card::after{ right:16px; }
+
+  .field-label{
+    font-family:"Courier New", ui-monospace, monospace;
+    font-size:10.5px; letter-spacing:0.1em; color:var(--ink-faint); text-transform:uppercase;
+  }
+  h1{ margin:4px 0 2px; font-size:24px; font-weight:400; font-style:italic; line-height:1.2; }
+  .meta{ font-family:"Courier New", ui-monospace, monospace; font-size:12.5px; color:var(--ink-faint); margin-bottom:6px; }
+  .price{ font-size:22px; margin: 6px 0 20px; }
+  hr{ border:none; border-top:1px solid var(--rule); margin:20px 0; }
+
+  .method{ margin-bottom: 26px; }
+  .method h3{
+    font-family:"Courier New", ui-monospace, monospace;
+    font-size:12px; letter-spacing:0.08em; text-transform:uppercase;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
+  #paypal-buttons{ min-height: 45px; }
+
+  .spei-table{ width:100%; border-collapse: collapse; font-size:13.5px; margin-bottom: 14px; }
+  .spei-table td{ padding: 4px 0; vertical-align:top; }
+  .spei-table td:first-child{
+    font-family:"Courier New", ui-monospace, monospace;
+    font-size:11px; color:var(--ink-faint); width: 110px; text-transform:uppercase;
+  }
+  .clabe{ font-family:"Courier New", ui-monospace, monospace; font-size:15px; letter-spacing:0.03em; }
+
+  .btn{
+    display:inline-block;
+    font-family:"Courier New", ui-monospace, monospace;
+    font-size:12.5px;
+    padding: 9px 14px;
+    background:#fbf9f2;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    text-decoration:none;
+    cursor:pointer;
+  }
+  .btn:hover{ background: var(--ink); color: var(--paper); }
+
+  .note{ font-size:12.5px; color:var(--ink-faint); margin-top:8px; }
+
+  .confirm-box{
+    text-align:center;
+    padding: 20px 0;
+  }
+  .confirm-box .field-label{ color: var(--stamp-green); }
+  .confirm-box p{ font-size:14px; line-height:1.5; }
+
+  .sold-out{ text-align:center; padding: 30px 0; }
+</style>
+</head>
+<body>
+  <div class="drawer-label">archivo de obras — comprar</div>
+  <div class="card" id="card">
+    <div class="field-label">cargando…</div>
+  </div>
+
+<script src="config.js"></script>
+<script>
+(async function(){
+  const params = new URLSearchParams(location.search);
+  const workId = params.get("id");
+  const card = document.getElementById("card");
+
+  if (!workId){
+    card.innerHTML = `<div class="field-label">falta el id de la obra</div><p>Abre esta página desde la galería, con <code>?id=CODIGO</code>.</p>`;
+    return;
+  }
+
+  let item;
+  try{
+    const res = await fetch("works/index.json", { cache:"no-store" });
+    const items = await res.json();
+    item = items.find(i => i.id === workId);
+  }catch(e){}
+
+  if (!item){
+    card.innerHTML = `<div class="field-label">obra ${workId}</div><p>No se encontró en el catálogo.</p>`;
+    return;
+  }
+
+  if (!item.disponible){
+    card.innerHTML = `
+      <div class="field-label">${item.id}</div>
+      <h1>${item.titulo||""}</h1>
+      <div class="sold-out">
+        <div class="field-label" style="color:var(--stamp-amber)">ya no disponible</div>
+        <p>Esta pieza ya fue vendida.</p>
+        <a class="btn" href="index.html">Ver galería</a>
+      </div>`;
+    return;
+  }
+
+  const precio = item.precioMXN || 0;
+  const precioFmt = precio.toLocaleString("es-MX", { style:"currency", currency:"MXN", maximumFractionDigits:0 });
+  const cfg = window.SHOP_CONFIG || {};
+
+  card.innerHTML = `
+    <div class="field-label">${item.id}</div>
+    <h1>${item.titulo||""}</h1>
+    <div class="meta">${item.tecnica||""}${item.tecnica&&item.anio?" · ":""}${item.anio||""}</div>
+    <div class="price">${precioFmt}</div>
+    <hr>
+    <div class="method">
+      <h3>Pagar con PayPal</h3>
+      <div id="paypal-buttons"></div>
+      <div class="note">Cobro y confirmación automáticos — no necesitas avisar nada aparte.</div>
+    </div>
+    <hr>
+    <div class="method">
+      <h3>Transferencia SPEI</h3>
+      <table class="spei-table">
+        <tr><td>Banco</td><td>${cfg.spei?.banco||"—"}</td></tr>
+        <tr><td>CLABE</td><td class="clabe">${cfg.spei?.clabe||"—"}</td></tr>
+        <tr><td>Beneficiario</td><td>${cfg.spei?.beneficiario||"—"}</td></tr>
+        <tr><td>Monto</td><td>${precioFmt}</td></tr>
+        <tr><td>Concepto</td><td>${item.id}</td></tr>
+      </table>
+      <a class="btn" id="spei-confirm-link" href="#">Ya transferí — avisar</a>
+      <div class="note">Esta transferencia se confirma a mano: en cuanto el artista vea el depósito y tu aviso, se marca la pieza como vendida.</div>
+    </div>
+  `;
+
+  // Enlace de aviso SPEI: usa WhatsApp si hay número configurado, si no, correo.
+  const speiMsg = `Hola, transferí por SPEI la obra ${item.id} (${item.titulo||""}) por ${precioFmt}. Adjunto mi comprobante.`;
+  const speiLink = document.getElementById("spei-confirm-link");
+  if (cfg.contactWhatsapp){
+    speiLink.href = `https://wa.me/${cfg.contactWhatsapp}?text=${encodeURIComponent(speiMsg)}`;
+    speiLink.target = "_blank";
+  } else {
+    speiLink.href = `mailto:${cfg.contactEmail||""}?subject=${encodeURIComponent("Comprobante SPEI - "+item.id)}&body=${encodeURIComponent(speiMsg)}`;
+  }
+
+  // --- PayPal ---
+  if (!cfg.paypalClientId || cfg.paypalClientId === "TU_CLIENT_ID_DE_PAYPAL"){
+    document.getElementById("paypal-buttons").innerHTML =
+      `<div class="note" style="color:var(--stamp-red)">Falta configurar el Client ID de PayPal en config.js.</div>`;
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.paypalClientId)}&currency=${encodeURIComponent(cfg.paypalCurrency||"MXN")}`;
+  script.onload = () => {
+    paypal.Buttons({
+      style: { layout: "vertical", color: "black", shape: "rect", label: "paypal" },
+      createOrder: function(data, actions){
+        return actions.order.create({
+          purchase_units: [{
+            description: `${item.id} — ${item.titulo||""}`,
+            amount: { value: String(precio), currency_code: cfg.paypalCurrency||"MXN" }
+          }]
+        });
+      },
+      onApprove: function(data, actions){
+        return actions.order.capture().then(function(details){
+          const orderId = details.id;
+          const msg = `Hola, acabo de pagar por PayPal la obra ${item.id} (${item.titulo||""}). Mi número de orden de PayPal es ${orderId}. Aquí está mi dirección de envío:`;
+          const mailto = `mailto:${cfg.contactEmail||""}?subject=${encodeURIComponent("Compra PayPal - "+item.id)}&body=${encodeURIComponent(msg)}`;
+          card.innerHTML = `
+            <div class="confirm-box">
+              <div class="field-label">pago recibido</div>
+              <h1>¡Gracias!</h1>
+              <p>Tu orden de PayPal es <strong>${orderId}</strong>.<br>
+              PayPal ya le avisó al artista automáticamente. Para que te llegue la pieza,
+              manda tu dirección de envío:</p>
+              <a class="btn" href="${mailto}">Enviar dirección de envío</a>
+            </div>`;
+        });
+      },
+      onError: function(err){
+        console.error(err);
+        document.getElementById("paypal-buttons").insertAdjacentHTML(
+          "afterend",
+          `<div class="note" style="color:var(--stamp-red)">Hubo un problema al procesar el pago. Intenta de nuevo o usa SPEI.</div>`
+        );
+      }
+    }).render("#paypal-buttons");
+  };
+  document.head.appendChild(script);
+})();
+</script>
+</body>
+</html>

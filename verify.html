@@ -200,7 +200,7 @@
 <script>
 (function(){
 
-  const PUBLIC_KEY_URL = "public-key.json"; // relativo: junto a este archivo en el repo
+  const KEYS_URL = "keys.json"; // relativo: junto a este archivo en el repo
 
   const params = new URLSearchParams(location.search);
   const workId = params.get("id");
@@ -233,33 +233,43 @@
       return { ok:false, reason:"La ficha no trae firma." };
     }
 
-    let trustedPub = null;
+    let keyEntry = null; // undefined = no se pudo cargar keys.json; null = no está en el historial
+    let keysLoaded = false;
     try{
-      const res = await fetch(PUBLIC_KEY_URL, { cache:"no-store" });
+      const res = await fetch(KEYS_URL, { cache:"no-store" });
       if (res.ok){
-        const j = await res.json();
-        trustedPub = j.publicKeyBase64;
+        const list = await res.json();
+        keysLoaded = true;
+        keyEntry = list.find(k => k.publicKeyBase64 === pubB64) || null;
       }
-    }catch(e){ /* seguimos sin ella; usamos la que trae la ficha, marcando el resultado */ }
-
-    const keyMatchesPublished = trustedPub ? (trustedPub === pubB64) : null;
+    }catch(e){ /* seguimos sin ella; se refleja en el resultado como "sin confirmar" */ }
 
     const canonical = JSON.stringify(canonicalize(copy));
     const data = new TextEncoder().encode(canonical);
 
+    let sigOk;
     try{
       const key = await crypto.subtle.importKey(
         "raw", b64ToBytes(pubB64), { name:"Ed25519" }, false, ["verify"]
       );
-      const sigOk = await crypto.subtle.verify("Ed25519", key, b64ToBytes(sigB64), data);
-      return {
-        ok: sigOk && keyMatchesPublished !== false,
-        sigOk,
-        keyMatchesPublished,
-      };
+      sigOk = await crypto.subtle.verify("Ed25519", key, b64ToBytes(sigB64), data);
     }catch(e){
       return { ok:false, reason:"Este navegador no soporta verificación Ed25519 (crypto.subtle). Prueba con una versión reciente de Chrome, Firefox o Safari." };
     }
+
+    if (!sigOk){
+      return { ok:false, tampered:true };
+    }
+    if (!keysLoaded){
+      return { ok:false, pending:true, reason:"No se pudo cargar el historial de llaves (keys.json) para confirmar el emisor." };
+    }
+    if (!keyEntry){
+      return { ok:false, unknownKey:true };
+    }
+    if (keyEntry.revoked){
+      return { ok:false, revoked:true, revokedDate: keyEntry.revokedDate };
+    }
+    return { ok:true };
   }
 
   function fmtHash(b64){
@@ -268,15 +278,19 @@
   }
 
   function render(work, result){
-    let stampClass = "pending", stampLabel = "SIN VERIFICAR", stampSvg = stampAmber();
-    if (result.reason){
-      stampClass = "pending"; stampLabel = result.reason;
-    } else if (result.ok){
-      stampClass = "ok"; stampLabel = "FIRMA AUTÉNTICA";
-      stampSvg = stampGreen();
+    let stampClass, stampLabel, stampSvg;
+    if (result.ok){
+      stampClass = "ok"; stampLabel = "FIRMA AUTÉNTICA"; stampSvg = stampGreen();
+    } else if (result.tampered){
+      stampClass = "bad"; stampLabel = "FIRMA NO VÁLIDA — el contenido no coincide con lo firmado"; stampSvg = stampRed();
+    } else if (result.revoked){
+      stampClass = "bad"; stampLabel = `LLAVE REVOCADA (desde ${result.revokedDate||"—"}) — no confiar sin verificar con el artista`; stampSvg = stampRed();
+    } else if (result.unknownKey){
+      stampClass = "bad"; stampLabel = "LLAVE DESCONOCIDA — no está en el historial publicado por el artista"; stampSvg = stampRed();
+    } else if (result.pending){
+      stampClass = "pending"; stampLabel = result.reason; stampSvg = stampAmber();
     } else {
-      stampClass = "bad"; stampLabel = "FIRMA NO VÁLIDA — no coincide con el registro";
-      stampSvg = stampRed();
+      stampClass = "pending"; stampLabel = result.reason || "SIN VERIFICAR"; stampSvg = stampAmber();
     }
 
     const photos = (work.fotos||[]).map(src=>`<img src="${src}" alt="">`).join("");

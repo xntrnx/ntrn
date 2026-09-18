@@ -1,272 +1,189 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Artist Portfolio - Digital Art & Music</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-    html {
-      scroll-behavior: smooth;
-    }
-
-    /* Silver / greyscale palette overrides */
-    body {
-      color: #C0C0C0; /* silver */
-      background-color: #000; /* keep black background */
-    }
-    /* Force common Tailwind text utility classes used in the file to silver */
-    .text-white,
-    .text-gray-400,
-    .text-gray-300,
-    .text-gray-500,
-    .text-gray-600 {
-      color: #C0C0C0 !important;
-    }
-
-    /* Greyscale gradients for headings (was colorful) */
-    .gradient-text {
-      background: linear-gradient(to right, #bfbfbf, #d9d9d9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero-gradient {
-      background: linear-gradient(to right, #bfbfbf, #d9d9d9, #9f9f9f);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* Minor accessibility: ensure links still visible on hover */
-    a:hover {
-      color: #e6e6e6;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galería — Archivo de obras</title>
+<style>
+  :root{
+    --paper:#E7E1CE;
+    --paper-edge:#D9D1B8;
+    --ink:#211C15;
+    --ink-faint:#5B5343;
+    --rule:#B7AC8B;
+    --stamp-green:#3F5A45;
+    --stamp-amber:#8A6A1E;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    background:#14110D;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 4px);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    color: var(--ink);
+    padding: 40px 16px 80px;
+  }
+  .drawer-label{
+    max-width: 980px;
+    margin: 0 auto 22px;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #A79C7D;
+    text-align:center;
+  }
+  .grid{
+    max-width: 980px;
+    margin: 0 auto;
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 22px;
+  }
+  .card{
+    position:relative;
+    background: var(--paper);
+    border: 1px solid var(--paper-edge);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 30px rgba(0,0,0,0.4);
+    padding: 20px 18px 18px;
+    text-decoration:none;
+    color: var(--ink);
+    display:flex;
+    flex-direction:column;
+  }
+  .card::before, .card::after{
+    content:"";
+    position:absolute;
+    top: 10px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #14110D;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .card::before{ left: 13px; }
+  .card::after{ right: 13px; }
+  .thumb-wrap{
+    aspect-ratio: 4/5;
+    overflow:hidden;
+    margin: 6px 0 12px;
+    border: 1px solid var(--paper-edge);
+    background: #d9d1b8;
+  }
+  .thumb-wrap img{ width:100%; height:100%; object-fit:cover; filter: sepia(0.12) contrast(1.02); display:block; }
+  .field-label{
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  h2{
+    margin: 3px 0 2px;
+    font-size: 18px;
+    font-weight: 400;
+    font-style: italic;
+    line-height:1.2;
+  }
+  .meta{
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  .bottom-row{
+    margin-top: auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-top: 10px;
+    border-top: 1px dashed var(--rule);
+  }
+  .price{ font-size: 14px; }
+  .badge{
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    padding: 2px 6px;
+    border: 1px solid currentColor;
+  }
+  .badge.disponible{ color: var(--stamp-green); }
+  .badge.vendida{ color: var(--stamp-amber); }
+  .actions{
+    display:flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .actions a{
+    flex:1;
+    text-align:center;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    padding: 7px 6px;
+    border: 1px solid var(--ink-faint);
+    color: var(--ink);
+    text-decoration:none;
+  }
+  .actions a.buy{
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .empty, .error{
+    max-width: 480px;
+    margin: 0 auto;
+    text-align:center;
+    color: #A79C7D;
+    font-family: "Courier New", ui-monospace, monospace;
+    font-size: 13px;
+  }
+</style>
 </head>
-<body class="bg-black">
-  <!-- Navigation -->
-  <nav class="fixed top-0 w-full bg-black/90 backdrop-blur-sm z-50 border-b border-white/10">
-    <div class="max-w-7xl mx-auto px-6 py-4">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold gradient-text">RINZAI</h1>
+<body>
+  <div class="drawer-label">archivo de obras — galería</div>
+  <div class="grid" id="grid">
+    <div class="empty">cargando…</div>
+  </div>
 
-        <!-- Desktop Menu -->
-        <div class="hidden md:flex gap-8">
-          <a href="#home" class="hover:text-purple-400 transition">Home</a>
-          <a href="#art" class="hover:text-purple-400 transition">Art</a>
-          <a href="blog/index.html" class="hover:text-purple-400 transition">Blog</a>
-          <a href="#about" class="hover:text-purple-400 transition">About</a>
-          <a href="#contact" class="hover:text-purple-400 transition">Contact</a>
-        </div>
-
-        <!-- Mobile Menu Button -->
-        <button class="md:hidden" onclick="toggleMobileMenu()">
-          <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-          <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Mobile Menu -->
-      <div id="mobile-menu" class="hidden md:hidden pt-4 pb-2 flex flex-col gap-4">
-        <a href="#home" class="hover:text-purple-400 transition">Home</a>
-        <a href="#art" class="hover:text-purple-400 transition">Art</a>
-        <a href="blog/index.html" class="hover:text-purple-400 transition">Blog</a>
-        <a href="#about" class="hover:text-purple-400 transition">About</a>
-        <a href="#contact" class="hover:text-purple-400 transition">Contact</a>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Hero Section -->
-  <section id="home" class="pt-32 pb-20 px-6">
-    <div class="max-w-7xl mx-auto text-center">
-      <h2 class="text-6xl md:text-8xl font-bold mb-6 hero-gradient">
-        Digital Artist & Music Producer
-      </h2>
-      <p class="text-xl text-gray-400 mb-8">
-        Creating immersive visual and auditory experiences
-      </p>
-      <div class="flex gap-6 justify-center flex-wrap">
-        <a href="#art" class="px-8 py-3 bg-gray-700 hover:bg-gray-600 rounded-full transition">
-          View Art
-        </a>
-        <a href="blog/index.html" class="px-8 py-3 border border-white/20 hover:bg-white/10 rounded-full transition">
-          Visit Blog
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Art Gallery Section -->
-  <section id="art" class="py-20 px-6 bg-gradient-to-b from-black to-purple-950/20">
-    <div class="max-w-7xl mx-auto">
-      <div class="flex items-center gap-3 mb-12">
-        <svg class="text-gray-400 w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" fill="none"></rect>
-          <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
-          <polyline points="21 15 16 10 5 21" stroke="currentColor" fill="none"></polyline>
-        </svg>
-        <h2 class="text-4xl font-bold">Digital Art Gallery</h2>
-      </div>
-
-      <!-- Filter Buttons -->
-      <div class="flex gap-4 mb-8 flex-wrap">
-        <button onclick="filterArt('all')" class="filter-btn px-6 py-2 rounded-full transition bg-purple-600" data-category="all">
-          All
-        </button>
-        <button onclick="filterArt('digital')" class="filter-btn px-6 py-2 rounded-full transition bg-white/10 hover:bg-white/20" data-category="digital">
-          Digital
-        </button>
-        <button onclick="filterArt('abstract')" class="filter-btn px-6 py-2 rounded-full transition bg-white/10 hover:bg-white/20" data-category="abstract">
-          Abstract
-        </button>
-      </div>
-
-      <!-- Gallery Grid -->
-      <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Art items will be dynamically loaded -->
-      </div>
-    </div>
-  </section>
-
-  <!-- About Section -->
-  <section id="about" class="py-20 px-6 bg-gradient-to-b from-black to-pink-950/20">
-    <div class="max-w-4xl mx-auto">
-      <h2 class="text-4xl font-bold mb-8">About</h2>
-      <div class="grid md:grid-cols-2 gap-12 items-center">
-        <div>
-          <div class="aspect-square rounded-lg bg-gradient-to-br from-gray-600 to-gray-700 mb-4"></div>
-        </div>
-        <div>
-          <p class="text-gray-300 mb-4 leading-relaxed">
-            I'm a digital artist and music producer creating immersive experiences at the intersection of visual and auditory art. My work explores the boundaries between the digital and physical.
-          </p>
-          <p class="text-gray-300 mb-6 leading-relaxed">
-            With over 5 years of experience in digital art and music production, I've collaborated with brands and artists worldwide to create unique sonic and visual landscapes.
-          </p>
-          <div class="flex gap-8">
-            <div class="text-center">
-              <div class="text-3xl font-bold text-gray-400">50+</div>
-              <div class="text-gray-400 text-sm">Artworks</div>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-gray-400">30+</div>
-              <div class="text-gray-400 text-sm">Tracks</div>
-            </div>
-            <div class="text-center">
-              <div class="text-3xl font-bold text-gray-400">20+</div>
-              <div class="text-gray-400 text-sm">Collaborations</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Contact Section -->
-  <section id="contact" class="py-20 px-6">
-    <div class="max-w-4xl mx-auto text-center">
-      <svg class="text-gray-400 mx-auto mb-4 w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <rect x="4" y="4" width="16" height="16" rx="2" ry="2" stroke="currentColor" fill="none"></rect>
-        <polyline points="22,6 12,13 2,6" stroke="currentColor" fill="none"></polyline>
-      </svg>
-      <h2 class="text-4xl font-bold mb-4">Get In Touch</h2>
-      <p class="text-gray-400 mb-8">Interested in collaborations or commissions? Let's create something amazing together.</p>
-
-      <div class="flex gap-6 justify-center mb-8">
-        <a href="#" class="w-12 h-12 rounded-full bg-white/10 hover:bg-gray-600 flex items-center justify-center transition">
-          <!-- simple placeholder icon -->
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
-        </a>
-        <a href="#" class="w-12 h-12 rounded-full bg-white/10 hover:bg-gray-600 flex items-center justify-center transition">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-        </a>
-        <a href="#" class="w-12 h-12 rounded-full bg-white/10 hover:bg-gray-600 flex items-center justify-center transition">
-          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M2 12h20"/></svg>
-        </a>
-      </div>
-
-      <a href="mailto:contact@artist.com" class="inline-block px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 rounded-full transition">Send Email</a>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="py-8 px-6 border-t border-white/10">
-    <div class="max-w-7xl mx-auto text-center text-gray-400">
-      <p>&copy; 2024 Artist Name. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <script>
-    // Sample artwork data
-    const artworks = [
-      { id: 1, title: 'Digital Dreams', category: 'digital', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=800&fit=crop' },
-      { id: 2, title: 'Neon Nights', category: 'digital', image: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800&h=800&fit=crop' },
-      { id: 3, title: 'Abstract Flow', category: 'abstract', image: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=800&fit=crop' },
-      { id: 4, title: 'Cyber Garden', category: 'digital', image: 'https://images.unsplash.com/photo-1618556450994-a6a128ef0d9d?w=800&h=800&fit=crop' },
-      { id: 5, title: 'Color Burst', category: 'abstract', image: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=800&h=800&fit=crop' },
-      { id: 6, title: 'Future Vision', category: 'digital', image: 'https://images.unsplash.com/photo-1620121692029-d088224ddc74?w=800&h=800&fit=crop' },
-    ];
-
-    let currentTrack = null; // kept for compatibility but no music UI
-
-    // Initialize gallery
-    function loadGallery(category = 'all') {
-      const grid = document.getElementById('gallery-grid');
-      const filtered = category === 'all' ? artworks : artworks.filter(art => art.category === category);
-
-      grid.innerHTML = filtered.map(art => `
-        <div class="group relative overflow-hidden rounded-lg aspect-square cursor-pointer">
-          <img src="${art.image}" alt="${art.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end">
-            <div class="p-6">
-              <h3 class="text-xl font-bold">${art.title}</h3>
-              <p class="text-gray-400 text-sm capitalize">${art.category}</p>
-            </div>
-          </div>
-        </div>
-      `).join('');
+<script>
+(async function(){
+  const grid = document.getElementById("grid");
+  try{
+    const res = await fetch("works/index.json", { cache:"no-store" });
+    if (!res.ok) throw new Error("no se pudo cargar el catálogo");
+    const items = await res.json();
+    if (!items.length){
+      grid.innerHTML = `<div class="empty">Todavía no hay obras registradas.</div>`;
+      return;
     }
+    grid.innerHTML = items.map(renderCard).join("");
+  }catch(e){
+    grid.innerHTML = `<div class="error">No se pudo cargar el catálogo (works/index.json). ${e.message}</div>`;
+  }
 
-    // Filter art
-    function filterArt(category) {
-      loadGallery(category);
-      // Update button styles
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        if (btn.dataset.category === category) {
-          btn.className = 'filter-btn px-6 py-2 rounded-full transition bg-purple-600';
-        } else {
-          btn.className = 'filter-btn px-6 py-2 rounded-full transition bg-white/10 hover:bg-white/20';
-        }
-      });
-    }
-
-    // Toggle mobile menu
-    function toggleMobileMenu() {
-      const menu = document.getElementById('mobile-menu');
-      const menuIcon = document.getElementById('menu-icon');
-      const closeIcon = document.getElementById('close-icon');
-
-      menu.classList.toggle('hidden');
-      menuIcon.classList.toggle('hidden');
-      closeIcon.classList.toggle('hidden');
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      loadGallery();
-    });
-  </script>
+  function renderCard(item){
+    const badgeClass = item.disponible ? "disponible" : "vendida";
+    const badgeText = item.disponible ? "DISPONIBLE" : "VENDIDA";
+    const precio = typeof item.precioMXN === "number"
+      ? item.precioMXN.toLocaleString("es-MX", { style:"currency", currency:"MXN", maximumFractionDigits:0 })
+      : "";
+    return `
+      <div class="card">
+        <div class="field-label">${item.id}</div>
+        ${item.thumb ? `<div class="thumb-wrap"><img src="${item.thumb}" alt=""></div>` : ""}
+        <h2>${item.titulo||"(sin título)"}</h2>
+        <div class="meta">${item.tecnica||""}${item.tecnica&&item.anio?" · ":""}${item.anio||""}</div>
+        <div class="bottom-row">
+          <div class="price">${precio}</div>
+          <div class="badge ${badgeClass}">${badgeText}</div>
+        </div>
+        <div class="actions">
+          <a href="verify.html?id=${encodeURIComponent(item.id)}">certificado</a>
+          ${item.disponible ? `<a class="buy" href="comprar.html?id=${encodeURIComponent(item.id)}">comprar</a>` : ""}
+        </div>
+      </div>`;
+  }
+})();
+</script>
 </body>
 </html>

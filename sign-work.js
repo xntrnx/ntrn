@@ -22,6 +22,8 @@ if (!filePath) {
 }
 
 const privatePath = path.join(__dirname, "private-key.pem");
+const keysPath = path.join(__dirname, "keys.json");
+
 if (!fs.existsSync(privatePath)) {
   console.error("No encuentro private-key.pem. Corre primero: node keygen.js");
   process.exit(1);
@@ -31,6 +33,24 @@ const privateKey = crypto.createPrivateKey(fs.readFileSync(privatePath, "utf8"))
 const publicKey = crypto.createPublicKey(privateKey);
 const publicRaw = publicKey.export({ type: "spki", format: "der" });
 const publicKeyBase64 = publicRaw.subarray(publicRaw.length - 32).toString("base64");
+
+// Asegura que esta llave esté registrada en keys.json (por si se perdió
+// o se editó a mano) y avisa si está marcada como revocada — firmar con
+// una llave revocada casi seguro es un error.
+let keys = fs.existsSync(keysPath) ? JSON.parse(fs.readFileSync(keysPath, "utf8")) : [];
+let entry = keys.find((k) => k.publicKeyBase64 === publicKeyBase64);
+if (!entry) {
+  entry = { publicKeyBase64, created: new Date().toISOString().slice(0, 10), revoked: false };
+  keys.push(entry);
+  fs.writeFileSync(keysPath, JSON.stringify(keys, null, 2) + "\n");
+  console.log("Nota: esta llave no estaba en keys.json, se agregó automáticamente.");
+} else if (entry.revoked) {
+  console.error(
+    "ADVERTENCIA: la llave privada que estás usando corresponde a una entrada\n" +
+    "marcada como REVOCADA en keys.json. Si esto es intencional, quita 'revoked'\n" +
+    "de esa entrada; si no, estás firmando con una llave que ya no es de confianza."
+  );
+}
 
 const work = JSON.parse(fs.readFileSync(filePath, "utf8"));
 delete work.signature;

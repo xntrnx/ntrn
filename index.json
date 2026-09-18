@@ -1,0 +1,11 @@
+[
+  {
+    "id": "TLK-2026-014",
+    "titulo": "Nombre de la obra",
+    "tecnica": "Óleo sobre lienzo",
+    "anio": 2026,
+    "thumb": "works/photos/TLK-2026-014-frente.jpg",
+    "precioMXN": 8500,
+    "disponible": true
+  }
+]
