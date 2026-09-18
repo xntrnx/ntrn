@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>theikkyu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital@0;1&family=Fraunces:ital,opsz,wght@1,9..144,600..900&family=Newsreader:ital,wght@1,300..500&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B0B0A;
+    --fg: #ECE8E1;
+    --muted: #726C60;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; height:100%; }
+  body{
+    background: radial-gradient(ellipse at 50% 35%, #141310 0%, var(--bg) 65%);
+    color: var(--fg);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width: 900px;
+    height: 40vh;
+    min-height: 220px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 0 24px;
+  }
+
+  .word{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    pointer-events:none;
+    text-align:center;
+  }
+  .word.active{
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .kanji{
+    font-family: "Noto Serif JP", serif;
+    font-size: clamp(20px, 3vw, 28px);
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .w-ikkyu{
+    font-family: "Newsreader", serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(42px, 9vw, 100px);
+    letter-spacing: -0.01em;
+  }
+  .w-pausa{
+    font-family: "Courier Prime", ui-monospace, monospace;
+    font-weight: 400;
+    font-size: clamp(28px, 6vw, 58px);
+    letter-spacing: 0.14em;
+    text-transform: lowercase;
+  }
+  .w-ceca{
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-weight: 780;
+    font-variation-settings: "SOFT" 60, "WONK" 1;
+    font-size: clamp(46px, 10vw, 108px);
+    letter-spacing: -0.01em;
+  }
+
+  .below{
+    margin-top: 4vh;
+    text-align:center;
+  }
+  .below a{
+    font-family: "Courier Prime", ui-monospace, monospace;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration:none;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 3px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+  }
+  .below a:hover{
+    color: var(--fg);
+    border-color: var(--muted);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .word{ transition: opacity 0.01s linear, transform 0.01s linear; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+    <div class="word w-ikkyu" data-i="0">
+      <span class="kanji">一休</span>
+      <span>theikkyu</span>
+    </div>
+    <div class="word w-pausa" data-i="1">
+      <span>una pausa</span>
+    </div>
+    <div class="word w-ceca" data-i="2">
+      <span>Cecahuitl</span>
+    </div>
+  </div>
+
+  <div class="below">
+    <a href="galeria.html">Galería →</a>
+  </div>
+
+<script>
+(function(){
+  const words = Array.from(document.querySelectorAll(".word"));
+  let i = 0;
+  const HOLD = 3400;
+
+  function show(idx){
+    words.forEach(w => w.classList.remove("active"));
+    words[idx].classList.add("active");
+  }
+
+  show(i);
+  setInterval(() => {
+    i = (i + 1) % words.length;
+    show(i);
+  }, HOLD);
+})();
+</script>
+</body>
+</html>
