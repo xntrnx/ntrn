@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comprar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300..500;1,300..500&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .sheet{ max-width:620px; margin:0 auto; padding:17vh 22px 14vh; }
+  .idline, .lines{ color:var(--ash); }
+  h1{ font-size:clamp(28px,4.4vw,44px); line-height:1.1; margin:6px 0 14px; }
+  .price{ font:300 40px/1 var(--serif); margin:22px 0 6px; font-variant-numeric:lining-nums; }
+  hr{ border:0; border-top:1px solid rgba(234,228,219,.14); margin:34px 0; }
+
+  .method h2{ font-size:22px; margin:0 0 16px; }
+  #paypal-buttons{ min-height:45px; max-width:420px; }
+  .fine{ color:var(--ash); font-size:15px; margin:12px 0 0; max-width:48ch; }
+  .err{ color:var(--red-hi); font-size:15px; margin:12px 0 0; }
+
+  dl{ display:grid; grid-template-columns:max-content 1fr; gap:8px 26px; margin:0 0 22px; }
+  dt{ color:var(--ash); }
+  dd{ margin:0; word-break:break-word; }
+  .clabe{ font:400 18px/1.3 var(--type); letter-spacing:.02em; }
+  .copy{
+    margin-left:12px; font:inherit; font-size:15px; color:var(--ash);
+    background:none; border:0; border-bottom:1px solid rgba(148,138,132,.5);
+    cursor:pointer; padding:0;
+  }
+  .copy:hover{ color:var(--bone); border-color:var(--red-hi); }
+
+  .center{ text-align:center; padding:6vh 0; }
+  .center h1{ margin-bottom:18px; }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a href="index.html">Inicio</a>
+  <a href="galeria.html">Galería</a>
+</header>
+
+<main class="sheet">
+  <div id="card"><p class="note">Cargando…</p></div>
+</main>
+
+<script src="assets/site.js"></script>
+<script src="config.js"></script>
+<script>
+(async function(){
+  const E = window.Site.esc;
+  const params = new URLSearchParams(location.search);
+  const workId = params.get("id");
+  const card = document.getElementById("card");
+
+  if (!workId){
+    card.innerHTML = `<h1>Comprar</h1><p class="note">Entra desde la galería para elegir una obra.</p>`;
+    return;
+  }
+
+  let item;
+  try{
+    const res = await fetch("works/index.json", { cache:"no-store" });
+    const items = await res.json();
+    item = items.find(i => i.id === workId);
+  }catch(e){}
+
+  if (!item){
+    card.innerHTML = `
+      <div class="idline">${E(workId)}</div>
+      <h1>Obra no encontrada</h1>
+      <p class="note">No está en el catálogo.</p>
+      <p><a class="link" href="galeria.html">Ver la galería</a></p>`;
+    return;
+  }
+
+  document.title = "Comprar: " + (item.titulo || item.id);
+
+  if (!item.disponible){
+    card.innerHTML = `
+      <div class="center sold">
+        <div class="idline">${E(item.id)}</div>
+        <h1>${E(item.titulo||"")}</h1>
+        <p><span class="st"><i class="dot"></i>Esta pieza ya fue vendida</span></p>
+        <p style="margin-top:28px"><a class="btn" href="galeria.html">Ver la galería</a></p>
+      </div>`;
+    return;
+  }
+
+  const precio = item.precioMXN || 0;
+  const precioFmt = precio.toLocaleString("es-MX", { style:"currency", currency:"MXN", maximumFractionDigits:0 });
+  const cfg = window.SHOP_CONFIG || {};
+  const lines = [item.tecnica, item.anio].filter(Boolean).map(x=>`<div>${E(x)}</div>`).join("");
+
+  card.innerHTML = `
+    <div class="idline">${E(item.id)}</div>
+    <h1>${E(item.titulo||"")}</h1>
+    <div class="lines">${lines}</div>
+    <div class="price">${precioFmt}</div>
+    <p class="fine">Incluye certificado de autenticidad firmado. <a class="link" href="obra.html?id=${encodeURIComponent(item.id)}">Ver la obra</a></p>
+    <hr>
+    <section class="method">
+      <h2>Pagar con PayPal</h2>
+      <div id="paypal-buttons"></div>
+      <p class="fine">El cobro y la confirmación son automáticos; no necesitas avisar nada aparte.</p>
+    </section>
+    <hr>
+    <section class="method">
+      <h2>Transferencia SPEI</h2>
+      <dl>
+        <dt>Banco</dt><dd>${E(cfg.spei?.banco||"—")}</dd>
+        <dt>CLABE</dt><dd><span class="clabe" id="clabe">${E(cfg.spei?.clabe||"—")}</span><button type="button" class="copy" id="copy">Copiar</button></dd>
+        <dt>Beneficiario</dt><dd>${E(cfg.spei?.beneficiario||"—")}</dd>
+        <dt>Monto</dt><dd>${precioFmt}</dd>
+        <dt>Concepto</dt><dd>${E(item.id)}</dd>
+      </dl>
+      <a class="btn" id="spei-confirm-link" href="#">Ya transferí, avisar</a>
+      <p class="fine">Esta transferencia se confirma a mano: cuando el artista vea el depósito y tu aviso, la pieza se marca como vendida.</p>
+    </section>
+  `;
+
+  const copyBtn = document.getElementById("copy");
+  copyBtn.addEventListener("click", async () => {
+    try{
+      await navigator.clipboard.writeText(cfg.spei?.clabe || "");
+      copyBtn.textContent = "Copiada";
+      setTimeout(() => { copyBtn.textContent = "Copiar"; }, 1800);
+    }catch(e){}
+  });
+
+  // Enlace de aviso SPEI: usa WhatsApp si hay número configurado, si no, correo.
+  const speiMsg = `Hola, transferí por SPEI la obra ${item.id} (${item.titulo||""}) por ${precioFmt}. Adjunto mi comprobante.`;
+  const speiLink = document.getElementById("spei-confirm-link");
+  if (cfg.contactWhatsapp){
+    speiLink.href = `https://wa.me/${cfg.contactWhatsapp}?text=${encodeURIComponent(speiMsg)}`;
+    speiLink.target = "_blank";
+    speiLink.rel = "noopener";
+  } else {
+    speiLink.href = `mailto:${cfg.contactEmail||""}?subject=${encodeURIComponent("Comprobante SPEI - "+item.id)}&body=${encodeURIComponent(speiMsg)}`;
+  }
+
+  // --- PayPal ---
+  if (!cfg.paypalClientId || cfg.paypalClientId === "TU_CLIENT_ID_DE_PAYPAL"){
+    document.getElementById("paypal-buttons").innerHTML =
+      `<p class="err">Falta configurar el Client ID de PayPal en config.js.</p>`;
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(cfg.paypalClientId)}&currency=${encodeURIComponent(cfg.paypalCurrency||"MXN")}`;
+  script.onload = () => {
+    paypal.Buttons({
+      style: { layout: "vertical", color: "white", shape: "rect", label: "paypal" },
+      createOrder: function(data, actions){
+        return actions.order.create({
+          purchase_units: [{
+            description: `${item.id} - ${item.titulo||""}`,
+            amount: { value: String(precio), currency_code: cfg.paypalCurrency||"MXN" }
+          }]
+        });
+      },
+      onApprove: function(data, actions){
+        return actions.order.capture().then(function(details){
+          const orderId = details.id;
+          const msg = `Hola, acabo de pagar por PayPal la obra ${item.id} (${item.titulo||""}). Mi número de orden de PayPal es ${orderId}. Aquí está mi dirección de envío:`;
+          const mailto = `mailto:${cfg.contactEmail||""}?subject=${encodeURIComponent("Compra PayPal - "+item.id)}&body=${encodeURIComponent(msg)}`;
+          card.innerHTML = `
+            <div class="center">
+              <div class="idline">Pago recibido</div>
+              <h1>Gracias</h1>
+              <p>Tu orden de PayPal es <strong>${E(orderId)}</strong>.<br>
+              PayPal ya le avisó al artista. Para que te llegue la pieza, manda tu dirección de envío.</p>
+              <p style="margin-top:28px"><a class="btn" href="${mailto}">Enviar dirección de envío</a></p>
+            </div>`;
+        });
+      },
+      onError: function(err){
+        console.error(err);
+        document.getElementById("paypal-buttons").insertAdjacentHTML(
+          "afterend",
+          `<p class="err">Hubo un problema al procesar el pago. Intenta de nuevo o usa SPEI.</p>`
+        );
+      }
+    }).render("#paypal-buttons");
+  };
+  document.head.appendChild(script);
+})();
+</script>
+</body>
+</html>

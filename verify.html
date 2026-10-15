@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Certificado de autenticidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300..500;1,300..500&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  .sheet{ max-width:680px; margin:0 auto; padding:17vh 22px 14vh; }
+  .idline, .lines{ color:var(--ash); }
+  h1{ font-size:clamp(28px,4.4vw,44px); line-height:1.1; margin:6px 0 14px; }
+  .photos{ display:flex; gap:10px; margin:28px 0; overflow-x:auto; padding-bottom:8px; }
+  .photos img{ height:150px; width:auto; box-shadow:0 24px 50px -20px rgba(0,0,0,.9), 0 0 0 1px rgba(234,228,219,.06); }
+  .desc{ max-width:50ch; color:#CFC8BE; line-height:1.7; margin:22px 0; }
+  dl{ margin:22px 0; display:grid; grid-template-columns:max-content 1fr; gap:6px 26px; }
+  dt{ color:var(--ash); }
+  dd{ margin:0; }
+  hr{ border:0; border-top:1px solid rgba(234,228,219,.14); margin:34px 0 10px; }
+
+  .stamp-zone{ display:flex; justify-content:center; min-height:156px; margin:10px 0 4px; }
+  .stamp{
+    width:152px; height:152px; opacity:0;
+    transform:scale(1.7) rotate(-14deg);
+    transition:opacity .18s ease-out, transform .38s cubic-bezier(.2,1.4,.4,1);
+  }
+  .stamp.show{ opacity:.95; transform:scale(1) rotate(-8deg); }
+  .status{ text-align:center; font-size:19px; max-width:46ch; margin:6px auto 0; }
+  .status.ok{ color:var(--bone); }
+  .status.bad{ color:var(--red-hi); }
+  .status.pending{ color:var(--ash); }
+  .hash-line{ text-align:center; color:var(--ash); font-size:15px; word-break:break-all; margin-top:8px; }
+  .back{ text-align:center; margin:30px 0 0; }
+
+  .fallback{ margin-top:40px; padding-top:18px; border-top:1px solid rgba(234,228,219,.14); }
+  .fallback summary{ cursor:pointer; color:var(--ash); }
+  .fallback textarea{
+    display:block; width:100%; height:120px; margin:12px 0;
+    background:rgba(234,228,219,.05); border:1px solid rgba(234,228,219,.2);
+    color:var(--bone); font:13px/1.5 var(--type); padding:10px;
+  }
+  .fallback input[type=file]{ color:var(--ash); font:inherit; margin:0 0 14px; display:block; }
+  .fallback .btn{ padding:11px 24px; font-size:17px; }
+
+  @media (prefers-reduced-motion:reduce){
+    .stamp{ transition:opacity .01s linear; transform:scale(1) rotate(-8deg); }
+  }
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <a href="index.html">Inicio</a>
+  <a href="galeria.html">Galería</a>
+</header>
+
+<main class="sheet">
+  <div id="content"><p class="note">Cargando certificado…</p></div>
+</main>
+
+<script src="assets/site.js"></script>
+<script>
+(function(){
+  const E = window.Site.esc;
+  const KEYS_URL = "keys.json"; // relativo: junto a este archivo en el repo
+
+  const params = new URLSearchParams(location.search);
+  const workId = params.get("id");
+  const contentEl = document.getElementById("content");
+
+  function b64ToBytes(b64){
+    const bin = atob(b64);
+    const arr = new Uint8Array(bin.length);
+    for (let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+    return arr;
+  }
+
+  function canonicalize(obj){
+    if (Array.isArray(obj)) return obj.map(canonicalize);
+    if (obj && typeof obj === "object"){
+      return Object.keys(obj).sort().reduce((acc,k)=>{ acc[k]=canonicalize(obj[k]); return acc; }, {});
+    }
+    return obj;
+  }
+
+  async function verifyWork(work){
+    const copy = Object.assign({}, work);
+    const sigB64 = copy.signature;
+    const pubB64 = copy.publicKeyBase64;
+    delete copy.signature;
+    delete copy.publicKeyBase64;
+
+    if (!sigB64 || !pubB64){
+      return { ok:false, reason:"La ficha no trae firma." };
+    }
+
+    let keyEntry = null; // undefined = no se pudo cargar keys.json; null = no está en el historial
+    let keysLoaded = false;
+    try{
+      const res = await fetch(KEYS_URL, { cache:"no-store" });
+      if (res.ok){
+        const list = await res.json();
+        keysLoaded = true;
+        keyEntry = list.find(k => k.publicKeyBase64 === pubB64) || null;
+      }
+    }catch(e){ /* seguimos sin ella; se refleja en el resultado como "sin confirmar" */ }
+
+    const canonical = JSON.stringify(canonicalize(copy));
+    const data = new TextEncoder().encode(canonical);
+
+    let sigOk;
+    try{
+      const key = await crypto.subtle.importKey(
+        "raw", b64ToBytes(pubB64), { name:"Ed25519" }, false, ["verify"]
+      );
+      sigOk = await crypto.subtle.verify("Ed25519", key, b64ToBytes(sigB64), data);
+    }catch(e){
+      return { ok:false, reason:"Este navegador no soporta verificación Ed25519 (crypto.subtle). Prueba con una versión reciente de Chrome, Firefox o Safari." };
+    }
+
+    if (!sigOk){
+      return { ok:false, tampered:true };
+    }
+    if (!keysLoaded){
+      return { ok:false, pending:true, reason:"No se pudo cargar el historial de llaves (keys.json) para confirmar el emisor." };
+    }
+    if (!keyEntry){
+      return { ok:false, unknownKey:true };
+    }
+    if (keyEntry.revoked){
+      return { ok:false, revoked:true, revokedDate: keyEntry.revokedDate };
+    }
+    const photos = await checkPhotos(copy);
+    if (photos.status === "mismatch"){
+      return { ok:false, photoMismatch:true };
+    }
+    return { ok:true, photos: photos.status };
+  }
+
+  // Compara el SHA-256 real de cada foto publicada con la huella firmada.
+  async function checkPhotos(work){
+    const urls = work.fotos || [];
+    const hashes = work.fotosSha256;
+    if (!urls.length) return { status:"none" };
+    if (!Array.isArray(hashes) || hashes.length !== urls.length) return { status:"nohash" };
+    for (let i=0;i<urls.length;i++){
+      try{
+        const res = await fetch(urls[i], { cache:"no-store" });
+        if (!res.ok) return { status:"unavailable" };
+        const digest = await crypto.subtle.digest("SHA-256", await res.arrayBuffer());
+        const hex = Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+        if (hex !== hashes[i]) return { status:"mismatch" };
+      }catch(e){ return { status:"unavailable" }; }
+    }
+    return { status:"ok" };
+  }
+
+  function fmtHash(b64){
+    if (!b64) return "";
+    return b64.slice(0,8)+"···"+b64.slice(-8);
+  }
+
+  function photoNote(result){
+    const notes = {
+      ok: "Fotos verificadas (SHA-256).",
+      nohash: "Esta ficha no incluye huellas de fotos.",
+      unavailable: "No se pudieron comprobar las fotos en este momento.",
+    };
+    const t = result.ok && notes[result.photos];
+    return t ? `<div class="hash-line">${t}</div>` : "";
+  }
+
+  const FALLBACK = `
+    <textarea id="manualJson" placeholder="Pega aquí el JSON de la obra"></textarea>
+    <input type="file" id="manualFile" accept="application/json">
+    <button type="button" class="btn" id="manualBtn">Verificar</button>`;
+
+  function render(work, result){
+    let cls, label, svg;
+    if (result.ok){
+      cls = "ok"; label = "Firma auténtica. El certificado coincide con la firma del artista."; svg = seal("var(--bone)", "AUTÉNTICO");
+    } else if (result.tampered){
+      cls = "bad"; label = "Firma no válida: el contenido no coincide con lo firmado."; svg = seal("var(--red-hi)", "NO VÁLIDO");
+    } else if (result.photoMismatch){
+      cls = "bad"; label = "Foto alterada: la imagen publicada no coincide con la que se firmó."; svg = seal("var(--red-hi)", "NO VÁLIDO");
+    } else if (result.revoked){
+      cls = "bad"; label = `Llave revocada desde ${E(result.revokedDate||"fecha desconocida")}: no confíes en este certificado sin confirmarlo con el artista.`; svg = seal("var(--red-hi)", "NO VÁLIDO");
+    } else if (result.unknownKey){
+      cls = "bad"; label = "Llave desconocida: no está en el historial publicado por el artista."; svg = seal("var(--red-hi)", "NO VÁLIDO");
+    } else {
+      cls = "pending"; label = E(result.reason || "No se pudo verificar."); svg = seal("var(--ash)", "SIN VERIFICAR");
+    }
+
+    const photos = (work.fotos||[]).map(src=>`<img src="${E(src)}" alt="">`).join("");
+    const lines = [work.tecnica, work.anio, work.dimensiones].filter(Boolean).map(x=>`<div>${E(x)}</div>`).join("");
+    document.title = (work.titulo || "Certificado") + ", certificado";
+
+    contentEl.innerHTML = `
+      <div class="idline">${E(work.id||"")}</div>
+      <h1>${E(work.titulo||"(sin título)")}</h1>
+      <div class="lines">${lines}</div>
+      ${photos ? `<div class="photos">${photos}</div>` : ""}
+      ${work.descripcion ? `<p class="desc">${E(work.descripcion)}</p>` : ""}
+      <dl>
+        ${work.propietarioActual ? `<dt>Propietario</dt><dd>${E(work.propietarioActual)}</dd>` : ""}
+        ${work.fechaRegistro ? `<dt>Registrada</dt><dd>${E(work.fechaRegistro)}</dd>` : ""}
+      </dl>
+      <hr>
+      <div class="stamp-zone"><div class="stamp" id="stamp">${svg}</div></div>
+      <div class="status ${cls}">${label}</div>
+      ${photoNote(result)}
+      ${work.signature ? `<div class="hash-line">Firma ${fmtHash(work.signature)}</div>` : ""}
+      ${work.id ? `<p class="back"><a class="link" href="obra.html?id=${encodeURIComponent(work.id)}">Ver la obra</a></p>` : ""}
+      <details class="fallback">
+        <summary>Verificar otra ficha manualmente</summary>
+        ${FALLBACK}
+      </details>
+    `;
+
+    requestAnimationFrame(()=>{
+      const s = document.getElementById("stamp");
+      if (s) s.classList.add("show");
+    });
+    wireFallback();
+  }
+
+  function wireFallback(){
+    const btn = document.getElementById("manualBtn");
+    const ta = document.getElementById("manualJson");
+    const file = document.getElementById("manualFile");
+    if (file){
+      file.addEventListener("change", async ()=>{
+        const f = file.files[0];
+        if (f) ta.value = await f.text();
+      });
+    }
+    if (btn){
+      btn.addEventListener("click", async ()=>{
+        try{
+          const work = JSON.parse(ta.value);
+          const result = await verifyWork(work);
+          render(work, result);
+        }catch(e){
+          alert("JSON inválido: "+e.message);
+        }
+      });
+    }
+  }
+
+  // Sello: hueso = auténtico, rojo = no válido, ceniza = sin verificar.
+  function seal(color, word){
+    const id = "f"+Math.random().toString(36).slice(2);
+    return `
+    <svg viewBox="0 0 160 160" width="100%" height="100%" role="img" aria-label="${word}">
+      <defs>
+        <filter id="${id}">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="3"/>
+        </filter>
+      </defs>
+      <g filter="url(#${id})" fill="none" stroke="${color}" stroke-width="3">
+        <circle cx="80" cy="80" r="62"/>
+        <circle cx="80" cy="80" r="52"/>
+      </g>
+      <text x="80" y="76" text-anchor="middle" fill="${color}" font-family="Courier Prime, Courier New, monospace"
+            font-size="${word.length > 10 ? 12 : 15}" filter="url(#${id})">${word}</text>
+      <text x="80" y="98" text-anchor="middle" fill="${color}" font-family="Newsreader, Georgia, serif"
+            font-style="italic" font-size="12" filter="url(#${id})">certificado</text>
+    </svg>`;
+  }
+
+  async function main(){
+    if (!workId){
+      contentEl.innerHTML = `
+        <h1>Certificado</h1>
+        <p class="desc">Abre este enlace con <code>?id=CODIGO-DE-LA-OBRA</code>, o verifica una ficha manualmente.</p>
+        <details class="fallback" open>
+          <summary>Verificar una ficha manualmente</summary>
+          ${FALLBACK}
+        </details>`;
+      wireFallback();
+      return;
+    }
+    try{
+      const res = await fetch(`works/${encodeURIComponent(workId)}.json`, { cache:"no-store" });
+      if (!res.ok) throw new Error("no encontrada");
+      const work = await res.json();
+      const result = await verifyWork(work);
+      render(work, result);
+    }catch(e){
+      contentEl.innerHTML = `
+        <div class="idline">${E(workId)}</div>
+        <h1>Certificado no encontrado</h1>
+        <p class="desc">No hay una ficha con este ID en el archivo.</p>
+        <p><a class="link" href="galeria.html">Ver la galería</a></p>`;
+    }
+  }
+
+  main();
+})();
+</script>
+</body>
+</html>

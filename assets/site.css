@@ -1,0 +1,155 @@
+/* site.css — sistema visual único de todo el sitio.
+   Negro y rojo, sobrio. Tipografía: máquina de escribir para títulos y nombres,
+   serif de libro para todo lo demás. Todo es CSS, sin imágenes ni librerías. */
+
+:root{
+  --void:#090506;      /* negro base, con fondo rojizo muy leve */
+  --bone:#EAE4DB;      /* hueso: texto principal */
+  --ash:#948A84;       /* ceniza cálida: texto secundario */
+  --red:#B3202A;       /* rojo: botones, líneas, vendida */
+  --red-hi:#E5565B;    /* rojo claro: texto y brillo sobre negro */
+  --blood:#4A0C11;     /* rojo profundo: neblina */
+  --type:"Courier Prime","Courier New",ui-monospace,monospace;
+  --serif:"Newsreader","Iowan Old Style",Georgia,serif;
+  --glyph:"Noto Sans JP","Courier Prime",monospace;
+  --ease:cubic-bezier(.2,.7,.1,1);
+}
+
+*{ box-sizing:border-box; }
+html{ background:var(--void); color-scheme:dark; }
+body{
+  margin:0; min-height:100vh;
+  color:var(--bone);
+  font-family:var(--serif); font-size:17px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+a{ color:inherit; }
+img{ display:block; }
+
+/* Títulos y nombres: siempre máquina de escribir */
+h1,h2,h3{
+  font-family:var(--type);
+  font-weight:400;
+  letter-spacing:-.03em;
+  margin:0;
+}
+
+.sr{
+  position:absolute; width:1px; height:1px; overflow:hidden;
+  clip:rect(0 0 0 0); white-space:nowrap;
+}
+a:focus-visible, button:focus-visible, summary:focus-visible{
+  outline:1px solid var(--red-hi); outline-offset:5px;
+}
+
+/* Transición entre páginas: la imagen de la obra "viaja" de la galería a la vista grande.
+   Solo en navegadores con View Transitions; en los demás es navegación normal. */
+@view-transition{ navigation:auto; }
+::view-transition-group(*){ animation-duration:.75s; animation-timing-function:var(--ease); }
+::view-transition-old(root), ::view-transition-new(root){ animation-duration:.45s; }
+
+/* Atmósfera: neblina roja que deriva lento, polvo fino y grano */
+.atmo{
+  position:fixed; inset:0; z-index:-1;
+  pointer-events:none; overflow:hidden;
+  background:radial-gradient(120% 70% at 50% -10%, rgba(234,228,219,.06), transparent 60%);
+}
+.orb{ position:absolute; border-radius:50%; width:70vmax; height:70vmax; }
+.orb.a{
+  left:-22vmax; top:-18vmax;
+  background:radial-gradient(circle, rgba(120,18,28,.50), transparent 65%);
+  animation:drift-a 52s ease-in-out infinite alternate;
+}
+.orb.b{
+  right:-28vmax; top:24vh;
+  background:radial-gradient(circle, rgba(74,12,17,.55), transparent 65%);
+  animation:drift-b 64s ease-in-out infinite alternate;
+}
+.orb.c{
+  left:12vw; bottom:-38vmax;
+  background:radial-gradient(circle, rgba(46,38,40,.55), transparent 65%);
+  animation:drift-c 76s ease-in-out infinite alternate;
+}
+@keyframes drift-a{ to{ transform:translate3d(16vmax,10vmax,0); } }
+@keyframes drift-b{ to{ transform:translate3d(-14vmax,-8vmax,0); } }
+@keyframes drift-c{ to{ transform:translate3d(10vmax,-12vmax,0); } }
+
+.atmo::after{
+  content:""; position:absolute; inset:0; opacity:.07;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dust{
+  position:absolute; bottom:-10px; border-radius:50%;
+  background:var(--bone); opacity:0;
+  animation:rise linear infinite;
+}
+.dust.r{ background:var(--red-hi); }
+@keyframes rise{
+  0%{ transform:translate3d(0,0,0); opacity:0; }
+  12%{ opacity:var(--o,.3); }
+  88%{ opacity:var(--o,.3); }
+  100%{ transform:translate3d(var(--dx,20px),-112vh,0); opacity:0; }
+}
+
+/* Barra superior (igual en todas las páginas) */
+.bar{
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  display:flex; justify-content:space-between; align-items:baseline; gap:20px;
+  padding:20px clamp(18px,4vw,44px) 38px;
+  background:linear-gradient(to bottom, rgba(9,5,6,.92), rgba(9,5,6,0));
+  pointer-events:none;
+}
+.bar > *{ pointer-events:auto; }
+.bar a, .bar button{
+  font:400 18px/1 var(--serif);
+  color:var(--bone); text-decoration:none;
+  background:none; border:0; padding:4px 0; cursor:pointer;
+  border-bottom:1px solid transparent;
+  transition:border-color .3s ease;
+}
+.bar a:hover, .bar button:hover{ border-bottom-color:var(--red); }
+
+/* Componentes comunes */
+.btn{
+  display:inline-block; padding:14px 30px;
+  background:var(--red); color:var(--bone);
+  font:400 18px/1 var(--serif);
+  text-decoration:none; border:0; cursor:pointer;
+  transition:background .3s ease;
+}
+.btn:hover{ background:#CC2C37; }
+.link{
+  color:var(--bone); text-decoration:none;
+  border-bottom:1px solid rgba(234,228,219,.35);
+  padding-bottom:3px; transition:border-color .3s ease;
+}
+.link:hover{ border-bottom-color:var(--red-hi); }
+.note{ color:var(--ash); font-style:italic; }
+
+/* Estado de venta: punto rojo = vendida (convención de galerías); anillo = disponible */
+.st{ display:inline-flex; align-items:center; gap:9px; color:var(--bone); }
+.dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+.open .dot{ border:1px solid var(--bone); }
+.sold .st{ color:var(--red-hi); }
+.sold .dot{ background:var(--red); box-shadow:0 0 9px rgba(229,86,91,.7); }
+
+/* Código que se descifra (el efecto de aparición de los nombres) */
+.mx{
+  font-family:var(--glyph) !important;
+  font-style:normal !important;
+  font-weight:400 !important;
+  letter-spacing:0 !important;
+  color:var(--red-hi) !important;
+  text-shadow:0 0 12px rgba(229,86,91,.6);
+}
+.lock{ animation:lock .55s ease-out; }
+@keyframes lock{
+  from{ text-shadow:0 0 16px rgba(229,86,91,.95); }
+  to{ text-shadow:0 0 0 rgba(229,86,91,0); }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .orb{ animation:none; }
+  .dust{ display:none; }
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*){ animation:none; }
+}
