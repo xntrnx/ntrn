@@ -10,42 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300..500;1,300..500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400&display=swap&text=%EF%BD%B1%EF%BD%B2%EF%BD%B3%EF%BD%B4%EF%BD%B5%EF%BD%B6%EF%BD%B7%EF%BD%B8%EF%BD%B9%EF%BD%BA%EF%BD%BB%EF%BD%BC%EF%BD%BD%EF%BD%BE%EF%BD%BF%EF%BE%80%EF%BE%81%EF%BE%82%EF%BE%83%EF%BE%84%EF%BE%85%EF%BE%86%EF%BE%87%EF%BE%88%EF%BE%89%EF%BE%8A%EF%BE%8B%EF%BE%8C%EF%BE%8D%EF%BE%8E%EF%BE%8F%EF%BE%90%EF%BE%91%EF%BE%92%EF%BE%93%EF%BE%94%EF%BE%95%EF%BE%96%EF%BE%97%EF%BE%98%EF%BE%99%EF%BE%9A%EF%BE%9B%EF%BE%9C%EF%BE%9D0123456789%3A.%3D%2A%2B%3C%3E%7C">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400&display=swap&text=%EF%BD%B1%EF%BD%B2%EF%BD%B3%EF%BD%B4%EF%BD%B5%EF%BD%B6%EF%BD%B7%EF%BD%B8%EF%BD%B9%EF%BD%BA[...]">
 <link rel="stylesheet" href="assets/site.css">
 <style>
   body{ overflow:hidden; display:grid; place-items:center; min-height:100svh; }
-
-  /* Código de fondo: listados de Java y HTML que se deslizan lento, en tres columnas
-     con velocidades distintas. El centro se oscurece para que los nombres se lean primero. */
-  .code{
-    position:fixed; inset:0; z-index:-1; pointer-events:none;
-    display:flex; justify-content:center; gap:clamp(24px,6vw,96px);
-    padding:0 clamp(16px,5vw,80px);
-    -webkit-mask-image:linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
-            mask-image:linear-gradient(to bottom, transparent, #000 16%, #000 84%, transparent);
-  }
-  .code::after{
-    content:""; position:absolute; inset:0;
-    background:radial-gradient(ellipse 46% 34% at 50% 50%, rgba(9,5,6,.94) 0%, rgba(9,5,6,.7) 55%, rgba(9,5,6,0) 100%);
-  }
-  .col{ flex:1 1 0; max-width:470px; height:100%; overflow:hidden; opacity:.55; }
-  .track{
-    white-space:pre;
-    font:13px/1.75 var(--type);
-    color:#7d726d;
-    animation:scroll var(--d,100s) linear var(--delay,0s) infinite;
-    will-change:transform;
-  }
-  @keyframes scroll{ to{ transform:translate3d(0,-50%,0); } }
-  .col:nth-child(1){ --d:110s; --delay:-20s; }
-  .col:nth-child(2){ --d:140s; --delay:-70s; }
-  .col:nth-child(3){ --d:120s; --delay:-45s; }
-  @media (max-width:900px){ .col:nth-child(3){ display:none; } }
-  @media (max-width:560px){ .col:nth-child(2){ display:none; } .col{ max-width:none; } }
-  .k{ color:#C2373E; }   /* palabras reservadas y etiquetas */
-  .s{ color:#B49687; }   /* cadenas */
-  .c{ color:#5a504c; font-style:italic; } /* comentarios */
-  .n{ color:#D08C72; }   /* números */
 
   .stage{
     position:relative;
@@ -85,17 +53,11 @@
   html:not(.js) .enter{ opacity:1; }
 
   @media (prefers-reduced-motion:reduce){
-    .track{ animation:none; }
     .caret{ animation:none; }
   }
 </style>
 </head>
 <body>
-  <div class="code" id="code" aria-hidden="true">
-    <div class="col"><div class="track" data-src="java1"></div></div>
-    <div class="col"><div class="track" data-src="html1"></div></div>
-    <div class="col"><div class="track" data-src="java2"></div></div>
-  </div>
 
   <main>
     <h1 class="sr">una pausa, Cecahuitl</h1>
@@ -112,169 +74,6 @@
 (function(){
   const S = window.Site;
 
-  /* Código de ejemplo (Java y HTML convencionales) que se muestra de fondo. */
-  const SRC = {
-java1:`package registro.obras;
-
-import java.security.MessageDigest;
-import java.util.ArrayList;
-import java.util.List;
-
-public class Certificado {
-
-    private final String id;
-    private final String titulo;
-    private final List<String> fotos = new ArrayList<>();
-    private byte[] firma;
-
-    public Certificado(String id, String titulo) {
-        this.id = id;
-        this.titulo = titulo;
-    }
-
-    public String huella(byte[] datos) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(datos);
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hash) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
-    }
-
-    public boolean estaFirmado() {
-        return firma != null && firma.length == 64;
-    }
-
-    public void agregarFoto(String ruta) {
-        if (ruta == null || ruta.isEmpty()) {
-            return;
-        }
-        fotos.add(ruta);
-    }
-
-    public int totalFotos() {
-        return fotos.size();
-    }
-
-    @Override
-    public String toString() {
-        return id + ": " + titulo;
-    }
-}
-`,
-html1:`<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>una pausa</title>
-  <link rel="stylesheet" href="estilo.css">
-</head>
-<body>
-  <header class="superior">
-    <nav>
-      <a href="/">inicio</a>
-      <a href="/obras">obras</a>
-      <a href="/contacto">contacto</a>
-    </nav>
-  </header>
-
-  <main id="contenido">
-    <section class="galeria">
-      <figure data-id="014">
-        <img src="fotos/014.jpg" alt="">
-        <figcaption>Cecahuitl</figcaption>
-      </figure>
-      <figure data-id="015">
-        <img src="fotos/015.jpg" alt="">
-        <figcaption>sin titulo</figcaption>
-      </figure>
-    </section>
-  </main>
-
-  <!-- una pausa -->
-  <footer>
-    <p>obra unica, certificada</p>
-  </footer>
-
-  <script src="app.js"><\/script>
-</body>
-</html>
-`,
-java2:`package registro.obras;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-
-public class Galeria {
-
-    private final Map<String, Obra> obras = new HashMap<>();
-
-    public void agregar(Obra obra) {
-        if (obra == null) {
-            throw new IllegalArgumentException("obra");
-        }
-        obras.put(obra.getId(), obra);
-    }
-
-    public List<Obra> disponibles() {
-        List<Obra> salida = new ArrayList<>();
-        for (Obra o : obras.values()) {
-            if (o.estaDisponible()) {
-                salida.add(o);
-            }
-        }
-        return salida;
-    }
-
-    public Obra buscar(String id) {
-        Obra obra = obras.get(id);
-        if (obra == null) {
-            throw new IllegalStateException("no existe " + id);
-        }
-        return obra;
-    }
-
-    // pausa
-    public int total() {
-        return obras.size();
-    }
-
-    public static void main(String[] args) {
-        Galeria g = new Galeria();
-        System.out.println("obras: " + g.total());
-    }
-}
-`
-  };
-
-  const KEYWORDS = "public|private|protected|class|static|void|int|new|return|if|else|for|while|import|package|final|try|catch|throw|throws|this|null|true|false|extends|implements";
-  const RE = new RegExp(
-    "(\\/\\/.*|&lt;!--.*?--&gt;)" +                    // 1 comentarios
-    "|(\"(?:[^\"\\\\]|\\\\.)*\")" +                    // 2 cadenas
-    "|(&lt;\\/?[a-zA-Z!][\\w-]*|\\/?&gt;)" +           // 3 etiquetas
-    "|\\b(" + KEYWORDS + ")\\b" +                      // 4 palabras reservadas
-    "|\\b(\\d+)\\b", "g");                              // 5 números
-
-  function highlight(code){
-    return code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .split("\n").map((ln) => ln.replace(RE, (m, c, s, t, k, n) =>
-        c ? '<span class="c">' + m + '</span>' :
-        s ? '<span class="s">' + m + '</span>' :
-        t ? '<span class="k">' + m + '</span>' :
-        k ? '<span class="k">' + m + '</span>' :
-        n ? '<span class="n">' + m + '</span>' : m)).join("\n");
-  }
-
-  document.querySelectorAll(".track").forEach((tr) => {
-    const html = highlight(SRC[tr.dataset.src] || "");
-    // Dos copias seguidas: al desplazar el 50% el bucle es invisible.
-    tr.innerHTML = html + "\n" + html + "\n";
-  });
-
   const words = Array.from(document.querySelectorAll(".word"));
   const enter = document.querySelector(".enter");
   const HOLD = 3200;
@@ -283,7 +82,6 @@ public class Galeria {
     await S.fontsReady(['400 40px "Courier Prime"', '400 16px "Noto Sans JP"'], 2200);
 
     if (S.reduce){
-      // Sin movimiento: los nombres se alternan sin efecto.
       enter.classList.add("show");
       let i = 0;
       words[0].classList.add("active");
