@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Authenticator</title>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="site-header" id="site-header"></header>
+
+<main class="page tool">
+  <header class="cert-head">
+    <p class="label">Artist's tool</p>
+    <h1>Authenticator</h1>
+  </header>
+  <p class="lead">Add or update a work, sign its certificate, and download a package to upload to the site.
+    Everything happens in this browser. Your signing key and passphrase are never sent anywhere.</p>
+
+  <p class="verdict bad" id="unsupported" hidden></p>
+
+  <!-- 1 -->
+  <section class="step">
+    <h2><span class="num">1</span> Registry</h2>
+    <p id="registry-status" class="note">Loading the current catalogue…</p>
+    <div id="registry-manual" hidden>
+      <p class="fine">The published files could not be read from here. Choose them from your copy of the site.</p>
+      <label class="field"><span>catalog.json</span><input type="file" id="manual-catalog" accept=".json"></label>
+      <label class="field"><span>keys.json</span><input type="file" id="manual-keys" accept=".json"></label>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="step">
+    <h2><span class="num">2</span> Signing key</h2>
+    <p id="key-status" class="note">Locked. A key is needed to sign a new or changed certificate.</p>
+
+    <div id="key-unlock">
+      <label class="field"><span>Key file (signing-key….json)</span><input type="file" id="key-file" accept=".json"></label>
+      <label class="field"><span>Passphrase</span><input type="password" id="key-pass" autocomplete="off"></label>
+      <button type="button" class="btn" id="key-unlock-btn">Unlock</button>
+    </div>
+
+    <details>
+      <summary>Create a new signing key</summary>
+      <p class="fine">Do this once, the first time. Later, only to replace a lost or stolen key.
+        The passphrase cannot be recovered: write it down and keep it apart from the key file.</p>
+      <label class="field"><span>New passphrase (12 characters or more)</span><input type="password" id="new-pass" autocomplete="new-password"></label>
+      <label class="field"><span>Repeat passphrase</span><input type="password" id="new-pass2" autocomplete="new-password"></label>
+      <button type="button" class="btn" id="key-create-btn">Create key and download key file</button>
+    </details>
+
+    <details>
+      <summary>Import a private-key.pem from the earlier tools</summary>
+      <label class="field"><span>private-key.pem</span><input type="file" id="pem-file" accept=".pem"></label>
+      <label class="field"><span>Passphrase to protect it from now on (12 characters or more)</span><input type="password" id="pem-pass" autocomplete="new-password"></label>
+      <button type="button" class="btn" id="pem-import-btn">Import and download key file</button>
+    </details>
+
+    <details>
+      <summary>Published keys</summary>
+      <div id="key-list"></div>
+      <button type="button" class="btn secondary" id="resign-btn">Re-sign every certificate with the unlocked key</button>
+    </details>
+  </section>
+
+  <!-- 3 -->
+  <section class="step">
+    <h2><span class="num">3</span> Work</h2>
+    <label class="field"><span>Work</span><select id="work-select"></select></label>
+
+    <form id="work-form" novalidate>
+      <div class="row">
+        <label class="field"><span>Work ID</span><input type="text" id="f-id" spellcheck="false" autocomplete="off"></label>
+        <label class="field grow"><span>Title</span><input type="text" id="f-title"></label>
+        <label class="field"><span>Year</span><input type="text" id="f-year" inputmode="numeric"></label>
+      </div>
+      <div class="row">
+        <label class="field grow"><span>Medium</span><input type="text" id="f-medium" placeholder="Oil on canvas"></label>
+        <label class="field grow"><span>Dimensions</span><input type="text" id="f-dimensions" placeholder="80 × 100 cm (31½ × 39⅜ in)"></label>
+        <label class="field"><span>Edition</span><input type="text" id="f-edition" placeholder="Unique work"></label>
+      </div>
+      <label class="field"><span>Description (optional)</span><textarea id="f-description" rows="3"></textarea></label>
+
+      <label class="field">
+        <span>Photographs — front first, then reverse, signature, details</span>
+        <input type="file" id="f-images" accept="image/*" multiple>
+      </label>
+      <p class="fine" id="images-note"></p>
+      <div class="previews" id="previews"></div>
+
+      <h3 class="label">Provenance</h3>
+      <p class="fine">The history of ownership, oldest first. This is public: name a collector only with their consent
+        (otherwise write “Private collection, city”).</p>
+      <div id="prov-rows"></div>
+      <button type="button" class="btn secondary" id="prov-add">Add entry</button>
+
+      <h3 class="label">Listing</h3>
+      <p class="fine">Status and price are not part of the certificate. Changing only these needs no key.</p>
+      <div class="row">
+        <label class="field"><span>Status</span>
+          <select id="f-status">
+            <option value="available">Available</option>
+            <option value="reserved">Reserved</option>
+            <option value="sold">Sold</option>
+            <option value="nfs">Not for sale</option>
+          </select></label>
+        <label class="field"><span>Price (blank = on request)</span><input type="text" id="f-price" inputmode="numeric"></label>
+        <label class="field"><span>Currency</span><input type="text" id="f-currency" maxlength="3" spellcheck="false"></label>
+      </div>
+
+      <p class="verdict bad" id="form-error" hidden></p>
+      <div class="actions">
+        <button type="submit" class="btn" id="save-btn">Sign and add to package</button>
+        <button type="button" class="btn secondary" id="remove-btn" hidden>Remove this work from the catalogue</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- 4 -->
+  <section class="step">
+    <h2><span class="num">4</span> Upload package</h2>
+    <ul id="changes" class="changes"><li class="note">No changes yet.</li></ul>
+    <button type="button" class="btn" id="download-btn" disabled>Download upload package (.zip)</button>
+    <ol class="fine howto">
+      <li>Unzip the package.</li>
+      <li>On GitHub, open the repository, then <b>Add file → Upload files</b>.</li>
+      <li>Drag in everything <em>inside</em> the unzipped folder (<code>catalog.json</code>, <code>keys.json</code>, the <code>works</code> folder), not the folder itself.</li>
+      <li>Press <b>Commit changes</b>. The site updates in a minute or two.</li>
+    </ol>
+  </section>
+</main>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/authenticator.js"></script>
+</body>
+</html>

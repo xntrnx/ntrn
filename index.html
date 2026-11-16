@@ -1,119 +1,41 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>una pausa, Cecahuitl</title>
-<meta name="description" content="una pausa, Cecahuitl. Obra pictórica única con certificado de autenticidad verificable.">
-<script>document.documentElement.classList.add("js")</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300..500;1,300..500&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400&display=swap&text=%EF%BD%B1%EF%BD%B2%EF%BD%B3%EF%BD%B4%EF%BD%B5%EF%BD%B6%EF%BD%B7%EF%BD%B8%EF%BD%B9%EF%BD%BA[...]">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Works</title>
+<meta name="description" content="Original works, each issued with a digitally signed certificate of authenticity.">
 <link rel="stylesheet" href="assets/site.css">
-<style>
-  body{ overflow:hidden; display:grid; place-items:center; min-height:100svh; }
-
-  .stage{
-    position:relative;
-    width:min(100%, 1000px);
-    height:40vh; min-height:220px;
-    display:grid; place-items:center;
-    padding:0 24px;
-  }
-  .word{
-    position:absolute;
-    display:flex; align-items:baseline; justify-content:center;
-    white-space:nowrap;
-    font:400 clamp(40px,9.4vw,112px)/1 var(--type);
-    letter-spacing:-.04em;
-  }
-  .js .word{ visibility:hidden; }
-  .js .word.active{ visibility:visible; }
-  .caret{
-    display:inline-block; width:.5em; height:.82em; margin-left:.14em;
-    background:var(--red);
-    transform:translateY(.08em);
-    animation:blink 1.1s steps(1) infinite;
-  }
-  @keyframes blink{ 50%{ opacity:0; } }
-
-  .enter{
-    position:fixed; left:50%; bottom:11vh; transform:translateX(-50%);
-    font:400 19px/1 var(--serif);
-    color:var(--ash); text-decoration:none;
-    padding:8px 2px;
-    border-bottom:1px solid rgba(148,138,132,.4);
-    opacity:0; transition:opacity .8s ease, color .3s ease, border-color .3s ease;
-    white-space:nowrap;
-  }
-  .enter.show{ opacity:1; }
-  .enter:hover{ color:var(--bone); border-color:var(--red-hi); }
-  html:not(.js) .enter{ opacity:1; }
-
-  @media (prefers-reduced-motion:reduce){
-    .caret{ animation:none; }
-  }
-</style>
 </head>
 <body>
+<header class="site-header" id="site-header"></header>
 
-  <main>
-    <h1 class="sr">una pausa, Cecahuitl</h1>
-    <div class="stage" aria-hidden="true">
-      <div class="word"><span data-t="una pausa">una pausa</span><i class="caret"></i></div>
-      <div class="word"><span data-t="Cecahuitl">Cecahuitl</span><i class="caret"></i></div>
+<main class="page">
+  <section class="intro" id="intro"></section>
+
+  <div class="works-head">
+    <h2 class="label" id="works-count">Works</h2>
+    <div class="filter" id="filter" role="group" aria-label="Filter works" hidden>
+      <button type="button" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" data-filter="available" aria-pressed="false">Available</button>
     </div>
-  </main>
+  </div>
 
-  <a class="enter" href="galeria.html" data-t="Entrar a la galería">Entrar a la galería</a>
+  <section class="grid" id="grid" aria-live="polite"></section>
+  <noscript><p class="note">This gallery needs JavaScript to load the works.</p></noscript>
 
-<script src="assets/site.js"></script>
-<script>
-(function(){
-  const S = window.Site;
+  <section class="contact" id="contact">
+    <h2 class="label">Contact</h2>
+    <div id="contact-body"></div>
+  </section>
+</main>
 
-  const words = Array.from(document.querySelectorAll(".word"));
-  const enter = document.querySelector(".enter");
-  const HOLD = 3200;
+<footer class="site-footer" id="site-footer"></footer>
 
-  async function run(){
-    await S.fontsReady(['400 40px "Courier Prime"', '400 16px "Noto Sans JP"'], 2200);
-
-    if (S.reduce){
-      enter.classList.add("show");
-      let i = 0;
-      words[0].classList.add("active");
-      setInterval(() => {
-        words[i].classList.remove("active");
-        i = (i + 1) % words.length;
-        words[i].classList.add("active");
-      }, 4000);
-      return;
-    }
-
-    let i = 0, first = true;
-    for(;;){
-      const w = words[i];
-      const part = w.querySelector("[data-t]");
-      w.classList.add("active");
-      await S.decode(part, part.dataset.t, { step: 70, scrambleMs: 560 });
-      if (first){
-        first = false;
-        enter.classList.add("show");
-        S.decode(enter, enter.dataset.t, { step: 35, scrambleMs: 400, jitter: 120 });
-      }
-      await S.sleep(HOLD);
-      await S.scramble(part, 650);
-      w.classList.remove("active");
-      part.style.transition = "none"; part.style.opacity = "";
-      await S.sleep(180);
-      i = (i + 1) % words.length;
-    }
-  }
-  run();
-})();
-</script>
+<script src="config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/gallery.js"></script>
 </body>
 </html>
