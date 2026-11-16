@@ -1,0 +1,8 @@
+# The signing key never goes in the repository.
+*signing-key*.json
+private-key.pem
+*.pem
+
+.DS_Store
+Thumbs.db
+*.zip
